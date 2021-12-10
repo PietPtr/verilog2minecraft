@@ -20,25 +20,25 @@ class GateVersion:
     def __repr__(self) -> str:
         return f"GateVersion {self.celltype} {self.size[0]}x{self.size[1]}x{self.size[2]}"
 
-# every size, position, etc is x z y
+# every size, position, etc is x y z
 minecraft_cell_lib = {
     # TODO: beetje dubbele administratie zo, wsch is de celltype property dan niet nodig
     "$_NOT_": [
         GateVersion("$_NOT_", 
-            np.array([1, 2, 2]), 
+            np.array([1, 3, 2]), 
             {"A": np.array([0, 0, 0])}, # pos + input_pos  = feed repeater in this block to drive input
             {"Y": np.array([0, 1, 0])}) # pos + output_pos = block next to which a repeater can be placed
         ], 
     "$_OR_": [
         GateVersion("$_OR_",
-            np.array([3, 2, 2]),
+            np.array([3, 3, 2]),
             {"A": np.array([0, 0, 0]),
              "B": np.array([2, 0, 0])},
             {"Y": np.array([1, 1, 0])})
     ],
     "$_DFFE_PP0N_": [
         GateVersion("$_DFFE_PP0N_",
-            np.array([4, 4, 2]),
+            np.array([11, 3, 7]),
             {"C": np.array([0, 0, 0]),
              "R": np.array([2, 0, 0]),
              "E": np.array([3, 1, 0]),
