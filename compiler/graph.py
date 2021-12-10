@@ -10,12 +10,26 @@ class Cell:
         self.input_ports = input_ports # [(string, net_id)]
         self.output_ports = output_ports
         self.outputs = []
+
+        self.position = None
+        self.gate_version = None
+        self.rotation = None
+        self.placed = False
     
     def set_outputs(self, outputs):
         self.outputs = outputs # [(cell, input port)]
+
+    def place(self, position, gate_version, rotation):
+        self.position = position
+        self.gate_version = gate_version
+        self.rotation = rotation
+        self.placed = True
     
     def __repr__(self):
-        return f"Cell ({self.celltype} -> {[x[0].celltype for x in self.outputs]})"
+        if not self.placed:
+            return f"Cell ({self.celltype} -> {[x[0].celltype for x in self.outputs]})"
+        else:
+            return f"Placed Cell ({self.celltype} at {self.position[0]},{self.position[1]},{self.position[2]} {self.rotation})"
 
 
 def load_graph(filename):
@@ -60,5 +74,3 @@ def find_outputs(partial_cell, cells):
 
     partial_cell.set_outputs(output_cells)
 
-
-pprint(load_graph("test.json"))
