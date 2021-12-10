@@ -1,20 +1,14 @@
 from typing import Dict, Tuple
-import numpy as np
 import amulet
 import os
-from enum import Enum
+
+from amulet import Block
 
 mc_version = ("java", (1, 17, 1))
 
 
 def tupleAdd(a: Tuple[int, int, int], b: Tuple[int, int, int]) -> Tuple[int, int, int]:
     return tuple((x + y for x, y in zip(a, b)))
-
-
-class Block(Enum):
-    STONE = "stone"
-    REDSTONE = "redstone_wire"
-    TORCH = "redstone_torch"
 
 
 class Model:
@@ -36,13 +30,25 @@ class World:
 
     def add_model(self, position: Tuple[int, int, int], model: Model):
         for coords, block in model.blocks.items():
-            self.set_block(tupleAdd(position, coords), amulet.Block("minecraft", block.value))
+            self.set_block(tupleAdd(position, coords), block)
+
+    def read_model(self, path: str, position: Tuple[int, int, int], size: Tuple[int, int, int]) -> Model:
+        minecraft = amulet.load_level(path)
+        blocks: Dict[Tuple[int, int, int], Block] = dict()
+        for x in range(0, size[0]):
+            for y in range(0, size[1]):
+                for z in range(0, size[2]):
+                    pos = tupleAdd(position, (x, y, z))
+                    block = minecraft.get_version_block(pos[0], pos[1], pos[2], "minecraft:overworld", mc_version)
+                    if isinstance(block[0], Block) and block[0].base_name != 'air':
+                        blocks[pos] = block[0]
+        minecraft.close()
+        return Model(blocks)
 
     def build(self, path: str):
         os.system(f"cp -r data/flat {path}")
-        self.minecraft = amulet.load_level(path)
+        minecraft = amulet.load_level(path)
         for coords, block in self.blocks.items():
-            print(f"Adding block: {coords} {block}")
-            self.minecraft.set_version_block(coords[0], coords[1], coords[2], "minecraft:overworld", mc_version, block)
-        self.minecraft.save()
-        self.minecraft.close()
+            minecraft.set_version_block(coords[0], coords[1], coords[2], "minecraft:overworld", mc_version, block)
+        minecraft.save()
+        minecraft.close()
