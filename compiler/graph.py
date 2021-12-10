@@ -24,6 +24,22 @@ class Cell:
         self.gate_version = gate_version
         self.rotation = rotation
         self.placed = True
+
+    def collides(self, position, size):
+        if self.gate_version is None or self.position is None:
+            return False
+        
+        tl = self.position 
+        br = self.gate_version.size + self.position
+        tl2 = position
+        br2 = position + size
+
+        if tl[0] <= tl2[0] <= br[0] and tl[1] <= tl2[1] <= br[1] and tl[2] <= tl2[2] <= br[2]:
+            return True
+        elif tl[0] <= br2[0] <= br[0] and tl[1] <= br2[1] <= br[1] and tl[2] <= br2[2] <= br[2]:
+            return True
+        else:
+            return False
     
     def __repr__(self):
         if not self.placed:
