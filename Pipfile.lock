@@ -1,0 +1,21 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "952d6591f48b1dd2bda107706080f8f7548890c443873ff5224433a94a196308"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "amulet-core": "*",
+            "python_version": "3.6"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {},
+    "develop": {}
+}
