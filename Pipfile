@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
+amulet-core = "*"
 
 [requires]
-python_version = "3.6"
-amulet-core = "*"
+python_version = "3.8"
