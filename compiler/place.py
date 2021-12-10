@@ -48,19 +48,43 @@ minecraft_cell_lib = {
     ]
 }
 
+def collides_with_any(position, size, placed_cells):
+    for placed in placed_cells:
+        if placed.collides(position, size):
+            return True
+    return False
+
+
 def place_random(graph, seed):
-    x_size = len(graph) * 3
+    x_size = int(len(graph) * 0.6)
     y_size = x_size
 
     np.random.seed(seed)
 
+    placed_cells = []
+
+    def random_pos():
+        return (np.random.rand(3) * (x_size - 4)).astype(int)
+
+    max_collision_tries = 0
+
     for cell in graph:
-        position = (np.random.rand(3) * (x_size - 4)).astype(int)
-        gv = minecraft_cell_lib[cell.celltype][0]
+        collides = True
+        collision_tries = 0
+        while collides:
+            position = random_pos()
+            gv = minecraft_cell_lib[cell.celltype][0]
+
+            collides = collides_with_any(position, gv.size, placed_cells)
+            if collides:
+                collision_tries += 1
+
+        max_collision_tries = max(max_collision_tries, collision_tries)
 
         cell.place(position, gv, Rotation.NORTH)
+        placed_cells.append(cell)
 
-    print(f"Placed randomly, result distance score: {manhattan_distance(graph)}")
+    print(f"Placed randomly, result distance score: {manhattan_distance(graph)}, {max_collision_tries} collision tries.")
 
     return graph
 
