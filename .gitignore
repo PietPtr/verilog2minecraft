@@ -3,4 +3,6 @@
 *.o
 *.hi
 examples/verilog
+logs/
+.idea/
 __pycache__/

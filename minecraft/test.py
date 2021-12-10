@@ -1,19 +1,23 @@
-import amulet
-from amulet.api.block import Block
+from world import World, Model, Block
+nand_gate = Model({
+    (0, 0, 2): Block.STONE,
+    (1, 0, 2): Block.STONE,
+    (2, 0, 2): Block.STONE,
+    (0, 1, 2): Block.TORCH,
+    (2, 1, 2): Block.TORCH,
+    (1, 1, 2): Block.REDSTONE,
+    (0, 0, 1): Block.REDSTONE,
+    (0, 0, 0): Block.REDSTONE,
+    (2, 0, 1): Block.REDSTONE,
+    (2, 0, 0): Block.REDSTONE,
+})
 
-# load the level
-level = amulet.load_level("data/flat")
-game_version = ("bedrock", (1, 18, 1))
+not_gate = Model({
+    (0, 0, 0): Block.STONE,
+    (0, 1, 0): Block.TORCH,
+})
 
-block = Block("minecraft", "stone")
-level.set_version_block(
-    0,  # x location
-    4,  # y location
-    0,  # z location
-    "overworld",  # dimension
-    game_version,
-    block,
-)
-
-level.save()
-level.close()
+world = World()
+world.add_model((0, 2, 0), nand_gate)
+world.add_model((0, 2, 5), not_gate)
+world.build('/home/daan/.minecraft/saves/epic')
