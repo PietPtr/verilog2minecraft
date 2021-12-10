@@ -7,6 +7,7 @@ verify_ssl = true
 
 [packages]
 amulet-core = "*"
+amulet-map-editor = "*"
 
 [requires]
 python_version = "3.8"
