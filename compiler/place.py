@@ -1,5 +1,4 @@
 import numpy as np
-import graph
 import random
 from pprint import pprint
 from enum import Enum

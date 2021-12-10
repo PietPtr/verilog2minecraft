@@ -46,7 +46,7 @@ class World:
         return Model(blocks)
 
     def build(self, path: str):
-        os.system(f"cp -r data/flat {path}")
+        os.system(f"cp -r minecraft/data/flat {path}")
         minecraft = amulet.load_level(path)
         for coords, block in self.blocks.items():
             minecraft.set_version_block(coords[0], coords[1], coords[2], "minecraft:overworld", mc_version, block)
