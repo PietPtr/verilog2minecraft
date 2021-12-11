@@ -37,7 +37,8 @@ class BlockType(Enum):
 
     def to_minecraft(self) -> Block:
         return Block('minecraft', self.value)
-    
+
+    @staticmethod
     def num_to_wool(idx):
         # haha dit is gewoon een array (:  
         num_to_wool = {
@@ -79,16 +80,28 @@ class RouteNode(NamedTuple):
         return result
 
 
+class NoRouteFoundException(Exception):
+    collision: Tuple[int, int, int]
+
+    def __init__(self, collision_output: Tuple[int, int, int], msg: str):
+        self.collision = collision_output
+        super(NoRouteFoundException, self).__init__(msg)
+
+
 class Router:
 
     bounding_box: Set[Tuple[int, int, int]]
-    routes: Dict[Tuple[Cell, str], List[List[Tuple[BlockType, Tuple[int, int, int]]]]]
+    bounding_box_static: Set[Tuple[int, int, int]]
     bounding_box_route: Dict[Tuple[int, int, int], Set[Tuple[int, int, int]]]
+    all_routes: Dict[Tuple[int, int, int], List[Tuple[BlockType, Tuple[int, int, int]]]]
+    blocks_to_route_starts: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]]
 
-    def __init__(self):
+    def __init__(self, static_bounding_box: Set[Tuple[int, int, int]]):
         self.bounding_box = set()
-        self.routes = dict()
+        self.bounding_box_static = static_bounding_box
+        self.all_routes = dict()
         self.bounding_box_route = dict()
+        self.blocks_to_route_starts = dict()
 
     def _manhattan(self, a: Tuple[int, int, int], b: Tuple[int, int, int]):
         return abs(a[0]-b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])
@@ -98,13 +111,14 @@ class Router:
         heapq.heappush(Q, (self._manhattan(start, end), 0, RouteNode(start, None, 0)))
         best = self._manhattan(start, end)
         visited = set()
+        collision_output: Optional[Tuple[int, int, int]] = None
         while 0 < len(Q) < 1000:
             heuristic, unused, node = heapq.heappop(Q)
             if node.point == end:
                 return node
 
-            if heuristic < best:
-                best = heuristic
+            if self._manhattan(node.point, end) < best:
+                best = self._manhattan(node.point, end)
 
             previous_points = node.visited_points()
 
@@ -112,72 +126,111 @@ class Router:
                 pos = tupleAdd((x, y, z), node.point)
                 if pos != end and (
                         pos in previous_points or
-                        (pos in self.bounding_box - self.bounding_box_route.get(end, set())) or
+                        (pos in self.bounding_box - self.bounding_box_route.get(start, set())) or
                         (pos[0], pos[1] - 1, pos[2]) in previous_points or
                         (pos[0], pos[1] - 2, pos[2]) in previous_points
                 ):
+                    collision_output = self.blocks_to_route_starts.get(pos, None) or \
+                                       self.blocks_to_route_starts.get((pos[0], pos[1] - 1, pos[2]), None) or \
+                                       self.blocks_to_route_starts.get((pos[0], pos[1] - 1, pos[2]), None)
                     continue
+
                 if pos in visited:
                     continue
                 visited.add(pos)
+
+                if self._manhattan(pos, end) <= 2:
+                    print(f'Adding {pos} with distance {self._manhattan(pos, end)}')
                 heapq.heappush(Q, (self._manhattan(pos, end) + node.length + 1, -node.length, RouteNode(pos, node, node.length + 1)))
 
-        raise Exception(f'Could not find route between {start} and {end}. Closest: {best}, start: {self._manhattan(start, end)}')
+        raise NoRouteFoundException(collision_output,
+                                    f'Could not find route between {start} and {end}. Closest: {best}, start: {self._manhattan(start, end)}')
 
     def fill_bb_with_placed_graph(self, placed: List[Cell]):
         for cell in placed:
             tl = cell.position
             br = cell.position + cell.gate_version.size
             allowed = [tuple(x) for x in cell.gate_version.output_positions.values()] + [tuple(x) for x in cell.gate_version.input_positions.values()]
-            for x in range(tl[0], br[0] + 1):
-                for y in range(tl[1], br[1] + 1):
-                    for z in range(tl[2], br[2] + 1):
+            for x in range(tl[0], br[0]):
+                for y in range(tl[1], br[1]):
+                    for z in range(tl[2], br[2]):
                         if (x, y, z) in allowed:
                             continue
-                        self.bounding_box.add((x, y, z))
+                        self.bounding_box_static.add((x, y, z))
 
-    def make_route(self, cell_output: Tuple[Cell, str], start: Tuple[int, int, int], end: Tuple[int, int, int]):
-        node = self._find_route(start, end)
-        print(f"found route from {start}->{end}")
+    def recompute_bounding_box(self):
+        self.bounding_box.clear()
+        self.bounding_box.update(self.bounding_box_static)
+        for bb in self.bounding_box_route.values():
+            self.bounding_box.update(bb)
+
+    def remove_route(self, route_start: Tuple[int, int, int]):
+        routes = self.all_routes[route_start]
+        for route in routes:
+            for block, pos in route:
+                self.blocks_to_route_starts[pos].remove(route_start)
+        del self.bounding_box_route[route_start]
+        del self.all_routes[route_start]
+        self.recompute_bounding_box()
+
+    def make_route(self, start: Tuple[int, int, int], end: Tuple[int, int, int]):
+        best_pos, best = start, self._manhattan(start, end)
+        if start in self.all_routes:
+            for block, pos in self.all_routes[start]:
+                if block != BlockType.REDSTONE:
+                    continue
+                score = self._manhattan(pos, end)
+                if score < best:
+                    best_pos, best = pos, score
+
+        if start not in self.blocks_to_route_starts:
+            self.blocks_to_route_starts[start] = []
+
+        node = self._find_route(best_pos, end)
+
+        print(f"found route from {best_pos}({start})->{end}")
         result = []
-        if end not in self.bounding_box_route:
-            self.bounding_box_route[end] = set()
+        if start not in self.bounding_box_route:
+            self.bounding_box_route[start] = set()
 
         while node is not None:
-            wool_idx = sum(map(ord, cell_output.name))
+            wool_idx = sum(start)
             result.append((BlockType.num_to_wool(wool_idx), (node.point[0], node.point[1] - 1, node.point[2])))
             result.append((BlockType.REDSTONE, (node.point[0], node.point[1], node.point[2])))
-            for x, y, z in product(range(-1, 2), range(-2, 3), range(-1, 2)):
+            for x, y, z in product(range(-1, 2), range(-2, 2), range(-1, 2)):
                 pos = tupleAdd((x, y, z), node.point)
                 self.bounding_box.add(pos)
-                self.bounding_box_route[end].add((x, y, z))
+                self.bounding_box_route[start].add(pos)
+                self.blocks_to_route_starts[pos].append(start)
             node = node.previous
-        if cell_output not in self.routes:
-            self.routes[cell_output] = []
-        self.routes[cell_output].append(result)
+        if start not in self.all_routes:
+            self.all_routes[start] = []
+
+        self.all_routes[start].extend(result)
 
     def get_all_blocks(self) -> List[Tuple[BlockType, Tuple[int, int, int]]]:
         result = []
-        for routes in self.routes.values():
-            for route in routes:
-                result.extend(route)
-                print(route)
+        for route in self.all_routes.values():
+            result.extend(route)
         return result
 
 
-def route(placed_cells) -> List[Tuple[BlockType, Tuple[int, int, int]]]:
-    router = Router()
-    router.fill_bb_with_placed_graph(placed_cells)
-    for cell in placed_cells:
-        for (from_port_name, to_cells) in cell.outputs.items():
-            for (to_cell, to_port_name) in to_cells:
-                start = cell.position + cell.gate_version.output_positions[from_port_name]
-                end = to_cell.position + to_cell.gate_version.input_positions[to_port_name]
-                print(cell, to_cell)
+def create_routes(network: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]],
+                  component_bounding_box: Set[Tuple[int, int, int]]) -> List[Tuple[BlockType, Tuple[int, int, int]]]:
+    router = Router(component_bounding_box)
+    todo = [start for start in network.keys()]
+    while len(todo) > 0:
+        start = todo.pop()
+        for end in network[start]:
+            print(f'Routing {start} -> {end}')
+            while True:
                 try:
-                    router.make_route(to_cell, (start[0], start[1], start[2]), (end[0], end[1], end[2]))
-                except Exception as e:
-
+                    router.make_route(start, end)
+                    break
+                except NoRouteFoundException as e:
                     print(e)
+                    print(f"Removing routes from point: {e.collision}")
+                    router.remove_route(e.collision)
+                    todo.append(e.collision)
 
     return router.get_all_blocks()

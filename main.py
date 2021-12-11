@@ -8,21 +8,22 @@ from util.coord import tupleAdd
 
 load_dotenv()
 
-unplaced = graph.load_graph("jsons/combi.json")
-# placed = place_and_route(unplaced) 
-placed = place.random_search(unplaced)
-redstone_tracks = router.route(placed)
-
-
 minecraft = World()
 components = ComponentManager()
+offset = (0, 2, 0)
 
-offset = (-70, 1, -135)
+unplaced = graph.load_graph("jsons/test.json")
+placed = place_and_route(unplaced)  # place.random_search(unplaced)
 
 for cell in placed:
     model = components.get_component(cell.celltype)
+    model.fill_area(cell.gate_version.size)
     position = tupleAdd(cell.position, offset)
     minecraft.add_model(position, model)
+minecraft.build(os.getenv("HOME") + "/.minecraft/saves/output")
+
+redstone_tracks = router.route(placed)
+print(redstone_tracks)
 
 for block, position in redstone_tracks:
     print(f"put {block} at {position}")

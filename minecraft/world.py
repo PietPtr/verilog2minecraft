@@ -14,6 +14,30 @@ class Model:
     def __init__(self, blocks: Dict[Tuple[int, int, int], Block]):
         self.blocks = blocks
 
+    def fill_area(self, size: Tuple[int, int, int]):
+        tl = (0, 0, 0)
+        br = size
+        # allowed = [tuple(x) for x in cell.gate_version.output_positions.values()] + [tuple(x) for x in
+        #                                                                              cell.gate_version.input_positions.values()]
+        for x in range(tl[0], br[0]):
+            for y in range(tl[1], br[1]):
+                for z in range(tl[2], br[2]):
+                    # if (x, y, z) in allowed:
+                    #     continue
+                    # self.bounding_box.add((x, y, z))
+                    if (x, y, z) not in self.blocks:
+                        self.blocks[(x, y, z)] = Block("minecraft", "glass")
+
+
+
+        # width, height, length = size
+        # for x in range(width):
+        #     for y in range(height):
+        #         for z in range(length):
+        #             if (x, y, z) not in self.blocks:
+        #                 self.blocks[(x, y, z)] = Block("minecraft", "glass")
+
+
 
 class World:
     blocks: Dict[Tuple[int, int, int], Block]
