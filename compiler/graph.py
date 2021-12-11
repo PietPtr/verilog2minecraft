@@ -10,6 +10,7 @@ class Cell:
         self.input_ports = input_ports # [(string, net_id)]
         self.output_ports = output_ports
         self.outputs = []
+        self.inputs = []
 
         self.position = None
         self.gate_version = None
@@ -18,6 +19,9 @@ class Cell:
     
     def set_outputs(self, outputs):
         self.outputs = outputs # {output_port: (cell, input port)}
+
+    def set_inputs(self, inputs):
+        self.inputs = inputs
 
     def place(self, position, gate_version, rotation):
         self.position = position
@@ -116,3 +120,17 @@ def find_outputs(partial_cell, cells):
 
     partial_cell.set_outputs(output_cells)
 
+
+def find_inputs(partial_cell, cells):
+    input_cells = {}
+    for input in partial_cell.input_ports:
+        (input_port, input_net_id) = input
+        for cell in cells:
+            for output in cell.output_ports:
+                (port_name, output_net_id) = output
+                if output_net_id == input_net_id:
+                    if input_port in input_cells:
+                        input_cells[input_port].append((cell, port_name))
+                    else:
+                        input_cells[input_port] = [(cell, port_name)]
+    partial_cell.set_inputs(input_cells)

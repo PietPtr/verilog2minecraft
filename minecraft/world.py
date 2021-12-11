@@ -4,12 +4,9 @@ import os
 
 from amulet import Block
 
+from util.coord import tupleAdd
+
 mc_version = ("java", (1, 17, 1))
-
-
-def tupleAdd(a: Tuple[int, int, int], b: Tuple[int, int, int]) -> Tuple[int, int, int]:
-    return tuple((x + y for x, y in zip(a, b)))
-
 
 class Model:
     blocks: Dict[Tuple[int, int, int], Block]
