@@ -1,5 +1,6 @@
 import json
 from pprint import pprint
+from compiler.cell_defs import *
 
 import numpy as np
 
@@ -72,17 +73,18 @@ class Cell:
 def read_constraints(filename):
     def parse_constraint(line):
         port_name = line.split(":")[0]
-        coords = line.split(":")[1].split(",")
-        return {
-            'port_name': port_name,
-            'coords': np.array([coords[0], coords[1], coords[2]])
-        }
+        coords = list(map(int, line.split(":")[1].split(",")))
+        return (
+            port_name,
+            np.array([coords[0], coords[1], coords[2]])
+        )
 
-    io_constraints = []
+    io_constraints = {}
     
     with open(filename, 'r') as file:
         for line in file.readlines():
-            io_constraints.append(parse_constraint(line))
+            (port_name, coords) = parse_constraint(line)
+            io_constraints[port_name] = coords
 
     return io_constraints
 
@@ -99,6 +101,8 @@ def load_graph(yosys_json, constraint_file):
     top = list(yosys['modules'].items())[0][1]
 
     graph = []
+
+    # add_outputs_to_graph(graph, constraints, top['ports'])
 
     for (cell, cellinfo) in top['cells'].items():
         inputs = []
@@ -117,7 +121,7 @@ def load_graph(yosys_json, constraint_file):
         find_outputs(partial_cell, graph)
         find_inputs(partial_cell, graph)
 
-    add_io_to_graph(graph, constraints, top['ports'])
+    # add_inputs_to_graph(graph, constraints, top['ports'])
 
     return graph
 
@@ -152,6 +156,26 @@ def find_inputs(partial_cell, cells):
                         input_cells[input_port] = [(cell, port_name)]
     partial_cell.set_inputs(input_cells)
 
-def add_io_to_graph(graph, constraints, port_json):
+def add_outputs_to_graph(graph, constraints, port_json):
     for (port_name, data) in port_json.items():
-        print(port_name, data)
+        if data['direction'] == 'output':
+            net_id = data['bits'][0] # Assume 1-bit I/O
+            o_cell = Cell(port_name + '_output', 'OUTPUT', [('DRIVEN', net_id)], [])
+            
+            o_cell.place(constraints[port_name], minecraft_cell_lib['OUTPUT'][0])
+            graph.append(o_cell)
+    
+    return graph
+
+
+def add_inputs_to_graph(graph, constraints, port_json):
+    for (port_name, data) in port_json.items():
+        if data['direction'] == 'input':
+            net_id = data['bits'][0] # Assume 1-bit I/O
+            i_cell = Cell(port_name + '_input', 'INPUT', [], [('DRIVES', net_id)])
+            
+            find_outputs(i_cell, graph)
+            i_cell.place(constraints[port_name], minecraft_cell_lib['INPUT'][0])
+            graph.append(i_cell)
+    
+    return graph
