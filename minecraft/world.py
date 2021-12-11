@@ -70,7 +70,7 @@ class World:
                             blocks[(x, y, z)] = block[0]
         minecraft.close()
         # Calculate origin
-        all_blocks = set(blocks.keys())
+        all_blocks = set(blocks.keys()).union(bounding_box).union(set(ports.values()))
         print(blocks)
         print(bounding_box)
         xs, ys, zs = [x[0] for x in all_blocks],  [x[1] for x in all_blocks],  [x[2] for x in all_blocks]
