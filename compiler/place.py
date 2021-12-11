@@ -55,7 +55,7 @@ def collides_with_any(position, size, placed_cells):
 
 
 def place_random(graph, seed):
-    x_size = int(len(graph) * 3)
+    x_size = int(len(graph) * 3.0)
     y_size = x_size
 
     np.random.seed(seed)
@@ -117,6 +117,12 @@ def random_search(graph):
         if dist < best_distance:
             best_distance = dist
             best_placed_seed = seed
+        
+        if collision_tries > 50:
+            print(f"High amount of collisions ({collision_tries}) in placer, provide more space.")
+        
+        if i % 100 == 0:
+            print(f"Random placer iteration {i}...")
 
     print(f"Placed {iterations} iterations randomly:")
     print(f"\tAverage distance: {total_dist // iterations}")

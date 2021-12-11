@@ -1,7 +1,7 @@
 import json
 from pprint import pprint
 
-
+import numpy as np
 
 class Cell:
     def __init__(self, name, celltype, input_ports, output_ports):
@@ -28,18 +28,41 @@ class Cell:
     def collides(self, position, size):
         if self.gate_version is None or self.position is None:
             return False
-        
-        tl = self.position 
-        br = self.gate_version.size + self.position
-        tl2 = position
-        br2 = position + size
 
-        if tl[0] <= tl2[0] <= br[0] and tl[1] <= tl2[1] <= br[1] and tl[2] <= tl2[2] <= br[2]:
-            return True
-        elif tl[0] <= br2[0] <= br[0] and tl[1] <= br2[1] <= br[1] and tl[2] <= br2[2] <= br[2]:
-            return True
-        else:
-            return False
+        SPACER = np.array([2, 2, 1])
+
+        a_pos = self.position - SPACER
+        a_size = self.gate_version.size + SPACER
+
+        b_pos = position - SPACER
+        b_size = size + SPACER
+        
+        a_tl = a_pos
+        a_br = a_pos + a_size
+        b_tl = b_pos
+        b_br = b_pos + b_size
+
+        a_max_x = max(a_tl[0], a_br[0])
+        a_min_x = min(a_tl[0], a_br[0])
+        a_max_y = max(a_tl[1], a_br[1])
+        a_min_y = min(a_tl[1], a_br[1])
+        a_max_z = max(a_tl[2], a_br[2])
+        a_min_z = min(a_tl[2], a_br[2])
+
+        b_max_x = max(b_tl[0], b_br[0])
+        b_min_x = min(b_tl[0], b_br[0])
+        b_max_y = max(b_tl[1], b_br[1])
+        b_min_y = min(b_tl[1], b_br[1])
+        b_max_z = max(b_tl[2], b_br[2])
+        b_min_z = min(b_tl[2], b_br[2])
+
+        return (
+            (a_min_x <= b_max_x and a_max_x >= b_min_x) and
+            (a_min_y <= b_max_y and a_max_y >= b_min_y) and
+            (a_min_z <= b_max_z and a_max_z >= b_min_z))
+
+
+        
     
     def __repr__(self):
         if not self.placed:
@@ -52,7 +75,7 @@ def load_graph(filename):
     yosys = json.load(open(filename))
 
     if len(yosys['modules']) > 1:
-        print("Your design is not flattened. Run `flatten' in Yosys when synthesizing your design.")
+        print("_your design is not flattened. Run `flatten' in _yosys when synthesizing your design.")
         exit()
 
     top = list(yosys['modules'].items())[0][1]
