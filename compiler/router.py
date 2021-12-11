@@ -12,14 +12,56 @@ FOUR_DIRECTIONS = [(1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)]
 ALL_DIRECTIONS = [(x, y + a, z) for x, y, z in FOUR_DIRECTIONS for a in range(-1, 2)]
 print(ALL_DIRECTIONS)
 
+
+
 class BlockType(Enum):
     STONE = "stone"
     REDSTONE = "redstone_wire"
     REPEATER = "repeater"
+    WHITE_WOOL = "white_wool"
+    ORANGE_WOOL = "orange_wool"
+    MAGENTA_WOOL = "magenta_wool"
+    LIGHT_BLUE_WOOL = "light_blue_wool"
+    YELLOW_WOOL = "yellow_wool"
+    LIME_WOOL = "lime_wool"
+    PINK_WOOL = "pink_wool"
+    GRAY_WOOL = "gray_wool"
+    LIGHT_GRAY_WOOL = "light_gray_wool"
+    CYAN_WOOL = "cyan_wool"
+    PURPLE_WOOL = "purple_wool"
+    BLUE_WOOL = "blue_wool"
+    BROWN_WOOL = "brown_wool"
+    GREEN_WOOL = "green_wool"
+    RED_WOOL = "red_wool"
+    BLACK_WOOL = "black_wool"
 
     def to_minecraft(self) -> Block:
         return Block('minecraft', self.value)
+    
+    def num_to_wool(idx):
+        # haha dit is gewoon een array (:  
+        num_to_wool = {
+            0: BlockType.WHITE_WOOL,
+            1: BlockType.ORANGE_WOOL,
+            2: BlockType.MAGENTA_WOOL,
+            3: BlockType.LIGHT_BLUE_WOOL,
+            4: BlockType.YELLOW_WOOL,
+            5: BlockType.LIME_WOOL,
+            6: BlockType.PINK_WOOL,
+            7: BlockType.GRAY_WOOL,
+            8: BlockType.LIGHT_GRAY_WOOL,
+            9: BlockType.CYAN_WOOL,
+            10: BlockType.PURPLE_WOOL,
+            11: BlockType.BLUE_WOOL,
+            12: BlockType.BROWN_WOOL,
+            13: BlockType.GREEN_WOOL,
+            14: BlockType.RED_WOOL,
+            15: BlockType.BLACK_WOOL
+        }
+        return num_to_wool[idx % 16]
 
+
+    
 
 class RouteNode(NamedTuple):
     point: Tuple[int, int, int]
@@ -102,7 +144,8 @@ class Router:
             self.bounding_box_route[end] = set()
 
         while node is not None:
-            result.append((BlockType.STONE, (node.point[0], node.point[1] - 1, node.point[2])))
+            wool_idx = sum(map(ord, cell_output.name))
+            result.append((BlockType.num_to_wool(wool_idx), (node.point[0], node.point[1] - 1, node.point[2])))
             result.append((BlockType.REDSTONE, (node.point[0], node.point[1], node.point[2])))
             for x, y, z in product(range(-1, 2), range(-2, 3), range(-1, 2)):
                 pos = tupleAdd((x, y, z), node.point)

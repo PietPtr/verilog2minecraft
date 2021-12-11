@@ -55,7 +55,7 @@ def collides_with_any(position, size, placed_cells):
 
 
 def place_random(graph, seed):
-    x_size = int(len(graph) * 5.0)
+    x_size = int(len(graph) * 10.0)
     y_size = x_size
 
     np.random.seed(seed)
@@ -64,7 +64,7 @@ def place_random(graph, seed):
 
     def random_pos():
         location = (np.random.rand(3) * (x_size - 4)).astype(int)
-        location[1] = 2
+        location[1] = 3
         return location
 
     max_collision_tries = 0

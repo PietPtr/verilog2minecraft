@@ -8,10 +8,10 @@ from util.coord import tupleAdd
 
 load_dotenv()
 
-unplaced = graph.load_graph("test.json")
-placed = place_and_route(unplaced)  # place.random_search(unplaced)
+unplaced = graph.load_graph("jsons/combi.json")
+# placed = place_and_route(unplaced) 
+placed = place.random_search(unplaced)
 redstone_tracks = router.route(placed)
-print(redstone_tracks)
 
 
 minecraft = World()
