@@ -4,9 +4,6 @@ from amulet import Block
 
 
 class WoolType(Enum):
-    STONE = "stone"
-    REDSTONE = "redstone_wire"
-    REPEATER = "repeater"
     WHITE_WOOL = "white_wool"
     ORANGE_WOOL = "orange_wool"
     MAGENTA_WOOL = "magenta_wool"

@@ -1,5 +1,7 @@
 import numpy as np
-
+import minecraft.world
+from typing import Tuple, List, Dict
+from util.wool import *
 
 class GateVersion:
     def __init__(self, celltype, size, input_positions, output_positions, implementation_file):
@@ -12,7 +14,35 @@ class GateVersion:
     def __repr__(self) -> str:
         return f"GateVersion {self.celltype} {self.size[0]}x{self.size[1]}x{self.size[2]}"
 
+def build(models : List[minecraft.world.Model]) -> Dict[str, List[GateVersion]]:
 
+    pass
+
+wool_map = {
+    "$_NOT_": {
+        WoolType.WHITE_WOOL: "A",
+        WoolType.GREEN_WOOL: "Y"
+    },
+    "$_OR_": {
+        WoolType.WHITE_WOOL: "A",
+        WoolType.BLACK_WOOL: "B",
+        WoolType.GREEN_WOOL: "Y"
+    },
+    "$_DFFE_PP0N_": {
+        WoolType.ORANGE_WOOL: "R",
+        WoolType.MAGENTA_WOOL: "Q",
+        WoolType.LIGHT_BLUE_WOOL: "D",
+        WoolType.YELLOW_WOOL: "C",
+        WoolType.LIME_WOOL: "E"
+    },
+    "INPUT": {
+
+    }
+}
+
+# minecraft_cell_lib = {
+
+# }
 
 # every size, position, etc is x y z
 minecraft_cell_lib = {

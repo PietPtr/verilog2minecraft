@@ -15,6 +15,13 @@ FOUR_DIRECTIONS = [(1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)]
 ALL_DIRECTIONS = [(x, y + a, z) for x, y, z in FOUR_DIRECTIONS for a in range(-1, 2)]
 print(ALL_DIRECTIONS)
     
+class BlockType(Enum):
+    STONE = "stone"
+    REDSTONE = "redstone_wire"
+    REPEATER = "repeater"
+
+    def to_minecraft(self) -> Block:
+        return Block('minecraft', self.value)
 
 class RouteNode(NamedTuple):
     point: Tuple[int, int, int]
@@ -136,7 +143,7 @@ class Router:
         while node is not None:
             wool_idx = sum(start)
             result.append((WoolType.num_to_wool(wool_idx), (node.point[0], node.point[1] - 1, node.point[2])))
-            result.append((WoolType.REDSTONE, (node.point[0], node.point[1], node.point[2])))
+            result.append((BlockType.REDSTONE, (node.point[0], node.point[1], node.point[2])))
             for x, y, z in product(range(-1, 2), range(-2, 2), range(-1, 2)):
                 pos = tupleAdd((x, y, z), node.point)
                 self.bounding_box.add(pos)

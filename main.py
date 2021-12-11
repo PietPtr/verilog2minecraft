@@ -1,6 +1,6 @@
 from typing import Tuple, Set
 
-from compiler import graph, place, router
+from compiler import graph, place, router, cell_defs
 from compiler.daanpnr import place_and_route
 from minecraft.world import World
 from minecraft.components import ComponentManager
@@ -11,13 +11,15 @@ from pprint import pprint
 
 load_dotenv()
 
+minecraft = World()
+components = ComponentManager()
+cell_lib = cell_defs.build(components.models)
+
 unplaced = graph.load_graph("jsons/combi.json", "constraints.txt")
 # placed = place_and_route(unplaced) 
 placed = place.random_search(unplaced)
 netmap = place.placed_to_netmap(placed)
 
-minecraft = World()
-components = ComponentManager()
 offset = (0, 2, 0)
 
 static_bounding_box: Set[Tuple[int, int, int]] = set()
