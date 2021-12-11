@@ -1,6 +1,9 @@
 from itertools import product
 from typing import List, Tuple, Set, Dict, Any, NamedTuple, Optional
 from enum import Enum
+
+from amulet import Block
+
 from compiler.graph import Cell
 from util.coord import tupleAdd
 import heapq
@@ -10,6 +13,8 @@ class BlockType(Enum):
     REDSTONE = "redstone_wire"
     REPEATER = "repeater"
 
+    def to_minecraft(self) -> Block:
+        return Block('minecraft', self.value)
 
 class RouteNode(NamedTuple):
     point: Tuple[int, int, int]
