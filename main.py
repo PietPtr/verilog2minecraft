@@ -13,8 +13,8 @@ unplaced = graph.load_graph("jsons/test.json")
 # placed = place_and_route(unplaced) 
 placed = place.random_search(unplaced)
 netmap = place.placed_to_netmap(placed)
-redstone_tracks = router.route(netmap)
-
+bb = place.placed_cell_bb(placed)
+redstone_tracks = router.route(netmap, bb)
 
 minecraft = World()
 components = ComponentManager()

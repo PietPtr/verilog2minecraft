@@ -4,6 +4,7 @@ from pprint import pprint
 from enum import Enum
 from typing import Tuple, List, Dict
 import compiler.graph as graph
+import util.coord as tup
 
 
 class GateVersion:
@@ -89,14 +90,12 @@ def place_random(graph, seed):
 
 def manhattan_distance(graph):
     sum = 0
-    for from_cell in graph:
-        for (from_port_name, to_cells) in from_cell.outputs.items():
-            for (to_cell, to_port_name) in to_cells:
-                out_pos = from_cell.position + from_cell.gate_version.output_positions[from_port_name]
-                in_pos = to_cell.position + to_cell.gate_version.input_positions[to_port_name]
-                dist = np.abs(out_pos - in_pos).sum() ** 2
-                sum += dist
-                pass
+
+    netmap = placed_to_netmap(graph)
+
+    for (start, ends) in netmap.items():
+        for end in ends:
+            sum += tup.dist(start, end)
 
     return sum
 
@@ -150,3 +149,17 @@ def placed_to_netmap(placed: List[graph.Cell]) -> Dict[Tuple[int, int, int], Lis
 
     return netmap
     
+def placed_cell_bb(self, placed: List[graph.Cell]):
+    bounding_box = set()
+    for cell in placed:
+        tl = cell.position
+        br = cell.position + cell.gate_version.size
+        allowed = [tuple(x) for x in cell.gate_version.output_positions.values()] + [tuple(x) for x in cell.gate_version.input_positions.values()]
+        for x in range(tl[0], br[0] + 1):
+            for y in range(tl[1], br[1] + 1):
+                for z in range(tl[2], br[2] + 1):
+                    if (x, y, z) in allowed:
+                        continue
+                    bounding_box.add((x, y, z))
+    
+    return bounding_box

@@ -124,18 +124,6 @@ class Router:
 
         raise Exception(f'Could not find route between {start} and {end}. Closest: {best}, start: {self._manhattan(start, end)}')
 
-    def fill_bb_with_placed_graph(self, placed: List[Cell]):
-        for cell in placed:
-            tl = cell.position
-            br = cell.position + cell.gate_version.size
-            allowed = [tuple(x) for x in cell.gate_version.output_positions.values()] + [tuple(x) for x in cell.gate_version.input_positions.values()]
-            for x in range(tl[0], br[0] + 1):
-                for y in range(tl[1], br[1] + 1):
-                    for z in range(tl[2], br[2] + 1):
-                        if (x, y, z) in allowed:
-                            continue
-                        self.bounding_box.add((x, y, z))
-
     def make_route(self, cell_output: Tuple[Cell, str], start: Tuple[int, int, int], end: Tuple[int, int, int]):
         node = self._find_route(start, end)
         print(f"found route from {start}->{end}")
