@@ -9,8 +9,8 @@ class Cell:
         self.celltype = celltype
         self.input_ports = input_ports # [(string, net_id)]
         self.output_ports = output_ports
-        self.outputs = []
-        self.inputs = []
+        self.outputs = {}
+        self.inputs = {}
 
         self.position = None
         self.gate_version = None
@@ -33,13 +33,13 @@ class Cell:
         if self.gate_version is None or self.position is None:
             return False
 
-        SPACER = np.array([0, 0, 0])
+        SPACER = np.array([2, 2, 2])
 
         a_pos = self.position - SPACER
-        a_size = self.gate_version.size + SPACER
+        a_size = self.gate_version.size + SPACER * 2
 
         b_pos = position - SPACER
-        b_size = size + SPACER
+        b_size = size + SPACER * 2
         
         a_tl = a_pos
         a_br = a_pos + a_size
