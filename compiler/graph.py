@@ -33,7 +33,7 @@ class Cell:
         if self.gate_version is None or self.position is None:
             return False
 
-        SPACER = np.array([2, 2, 2])
+        SPACER = np.array([5, 5, 5])
 
         a_pos = self.position - SPACER
         a_size = self.gate_version.size + SPACER * 2
