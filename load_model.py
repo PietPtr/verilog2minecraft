@@ -8,6 +8,6 @@ if __name__ == "__main__":
     world = World()
     start = tuple(map(int, sys.argv[2].split(',')))
     end = tuple(map(int, sys.argv[3].split(',')))
-    model = world.read_model(sys.argv[1], start, (end[0] - start[0], end[1] - start[1], end[2] - start[2]))
+    model = world.read_model(sys.argv[1], start, (end[0] - start[0] + 1, end[1] - start[1] + 1, end[2] - start[2] + 1))
     with open(f'minecraft/data/components/{sys.argv[4]}', 'wb') as f:
         pickle.dump(model, f)

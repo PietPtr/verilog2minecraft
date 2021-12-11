@@ -25,20 +25,20 @@ minecraft_cell_lib = {
     # TODO: beetje dubbele administratie zo, wsch is de celltype property dan niet nodig
     "$_NOT_": [
         GateVersion("$_NOT_", 
-            np.array([0, 2, 5]),
+            np.array([1, 3, 6]),
             {"A": np.array([0, 1, 0])}, # pos + input_pos  = feed repeater in this block to drive input
             {"Y": np.array([0, 1, 5])}) # pos + output_pos = block next to which a repeater can be placed
         ], 
     "$_OR_": [
         GateVersion("$_OR_",
-            np.array([4, 2, 2]),
+            np.array([5, 3, 3]),
             {"A": np.array([4, 2, 2]),
              "B": np.array([0, 2, 2])},
             {"Y": np.array([2, 2, 0])})
     ],
     "$_DFFE_PP0N_": [
         GateVersion("$_DFFE_PP0N_",
-            np.array([6, 3, 12]),
+            np.array([7, 4, 13]),
             {"C": np.array([4, 1, 0]),
              "R": np.array([6, 1, 10]),
              "E": np.array([2, 1, 0]),
