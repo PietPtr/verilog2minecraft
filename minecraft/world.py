@@ -14,13 +14,17 @@ class Model:
     bounding_box: Set[Tuple[int, int, int]]
     size: Tuple[int, int, int]
     ports: Dict[WoolType, Tuple[int, int, int]]
+    yosys_name: str
+    name: str
 
     def __init__(self, blocks: Dict[Tuple[int, int, int], Block], bounding_box: Set[Tuple[int, int, int]],
-                 ports: Dict[WoolType, Tuple[int, int, int]], size: Tuple[int, int, int]):
+                 ports: Dict[WoolType, Tuple[int, int, int]], size: Tuple[int, int, int], yosys_name: str, name: str):
         self.blocks = blocks
         self.bounding_box = bounding_box
         self.ports = ports
         self.size = size
+        self.yosys_name = yosys_name
+        self.name = name
 
     def fill_area(self, size: Tuple[int, int, int]):
         for pos in self.bounding_box:
@@ -43,20 +47,21 @@ class World:
         for coords, block in model.blocks.items():
             self.set_block(tupleAdd(position, coords), block)
 
-    def read_model(self, path: str, position: Tuple[int, int, int], size: Tuple[int, int, int]) -> Model:
+    def read_model(self, path: str, position: Tuple[int, int, int], end: Tuple[int, int, int], yosys_name: str, name: str) -> Model:
         minecraft = amulet.load_level(path)
         blocks: Dict[Tuple[int, int, int], Block] = dict()
         bounding_box: Set[Tuple[int, int, int]] = set()
         ports: Dict[WoolType, Tuple[int, int, int]] = dict()
-        for x in range(0, size[0]):
-            for y in range(0, size[1]):
-                for z in range(0, size[2]):
-                    pos = tupleAdd(position, (x, y, z))
+
+        for x in range(position[0], end[0]+1):
+            for y in range(position[1], end[1]+1):
+                for z in range(position[2], end[2]+1):
+                    pos = (x, y, z)
                     block = minecraft.get_version_block(pos[0], pos[1], pos[2], "minecraft:overworld", mc_version)
                     if isinstance(block[0], Block) and block[0].base_name != 'air':
                         if block[0].base_name == 'glass':
                             bounding_box.add((x, y, z))
-                        elif block[0].base_name in WoolType:
+                        elif block[0].base_name in [wool.value for wool in WoolType]:
                             ports[WoolType(block[0].base_name)] = (x, y+1, z)
                         else:
                             if block[0].base_name == 'stone':
@@ -64,7 +69,9 @@ class World:
                             blocks[(x, y, z)] = block[0]
         minecraft.close()
         # Calculate origin
-        all_blocks = set(blocks.keys()).union(bounding_box)
+        all_blocks = set(blocks.keys())
+        print(blocks)
+        print(bounding_box)
         xs, ys, zs = [x[0] for x in all_blocks],  [x[1] for x in all_blocks],  [x[2] for x in all_blocks]
         origin = min(xs), min(ys), min(zs)
         blocks = {tupleSub(k, origin): v for k, v in blocks.items()}
@@ -73,7 +80,7 @@ class World:
 
         size = tupleSub((max(xs), max(ys), max(zs)), origin)
 
-        return Model(blocks, bounding_box, ports, size)
+        return Model(blocks, bounding_box, ports, size, yosys_name, name)
 
     def build(self, path: str):
         os.system(f"rm -r {path} && cp -r minecraft/data/flat {path}")
