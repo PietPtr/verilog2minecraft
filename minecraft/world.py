@@ -71,7 +71,7 @@ class World:
                             ports[WoolType(block[0].base_name)] = (x, y+1, z)
                             blocks[(x, y, z)] = block[0]
                         else:
-                            if block[0].base_name in ['stone', 'redstone_wire', 'repeater', 'redstone_torch', 'redstone_wall_torch']:
+                            if block[0].base_name in ['stone', 'redstone_wire', 'repeater', 'redstone_torch', 'redstone_wall_torch', 'lever', 'redstone_lamp']:
                                 bounding_box.add((x, y, z))
                             blocks[(x, y, z)] = block[0]
         minecraft.close()

@@ -15,6 +15,9 @@ def build_file(verilog_file, output_file, svg_file):
         print(line, end='')
         line = outpipe.readline()
 
+    if svg_file != None:
+        copy(os.getenv("HOME") + "/.yosys_show.dot", svg_file)
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("verilog", help="Verilog file to synthesize.")

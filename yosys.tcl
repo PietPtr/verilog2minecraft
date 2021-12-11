@@ -25,6 +25,7 @@ yosys hierarchy -check
 yosys stat
 yosys check
 if {$::env(DO_SHOW) == "True"} {
+    puts "hoi"
     yosys show -format svg -width
 }
 yosys write_json $::env(JSON_FILE_NAME)
