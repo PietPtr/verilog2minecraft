@@ -16,6 +16,7 @@ components = ComponentManager()
 
 for cell in placed:
     model = components.get_component(cell.celltype)
+    position = [cell.position[0] - 70, cell.position[1], cell.position[2] - 135]
     minecraft.add_model(cell.position, model)
 
 minecraft.build(os.getenv("HOME") + "/.minecraft/saves/output")
