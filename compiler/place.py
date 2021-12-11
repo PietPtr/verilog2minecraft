@@ -55,7 +55,7 @@ def collides_with_any(position, size, placed_cells):
 
 
 def place_random(graph, seed):
-    x_size = int(len(graph) * 3.0)
+    x_size = int(len(graph) * 5.0)
     y_size = x_size
 
     np.random.seed(seed)
@@ -109,7 +109,7 @@ def random_search(graph):
     total_tries = 0
 
     seed1 = random.randint(0, 2**32 - 1)
-    iterations = 1000
+    iterations = 100
 
     for i in range(iterations):
         seed = (i * seed1) & 0xffffffff
