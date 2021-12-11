@@ -70,7 +70,7 @@ class Router:
             for x in range(tl[0], br[0] + 1):
                 for y in range(tl[0], br[0] + 1):
                     for z in range(tl[0], br[0] + 1):
-                        self.bounding_box.add(x, y, z)
+                        self.bounding_box.add((x, y, z))
 
     def make_route(self, cell_output: Tuple[Cell, str], start: Tuple[int, int, int], end: Tuple[int, int, int]):
         try:
