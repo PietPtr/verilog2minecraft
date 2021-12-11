@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 
-from compiler.place import minecraft_cell_lib, Rotation, collides_with_any
+from compiler.place import minecraft_cell_lib, collides_with_any
 
 
 def place_and_route(unplaced):
@@ -17,7 +17,7 @@ def place_and_route(unplaced):
             continue
         gv = minecraft_cell_lib[cell.celltype][0]
         if placer is None:
-            cell.place(np.array([0, 5, 0]), gv, Rotation.NORTH)
+            cell.place(np.array([0, 5, 0]), gv)
         else:
             new_position = np.array(placer.position)
             new_position[0] += placer.gate_version.size[0] + 1
@@ -26,7 +26,7 @@ def place_and_route(unplaced):
                 new_position[0] += random.randint(-2, 2)
                 new_position[1] = max(5, new_position[1] + random.randint(-2, 2))
                 new_position[2] += random.randint(-2, 2)
-            cell.place(new_position, gv, Rotation.NORTH)
+            cell.place(new_position, gv)
 
         for inputs in cell.inputs.values():
             for input, _ in inputs:
@@ -45,12 +45,3 @@ def place_and_route(unplaced):
     return unplaced
 
 
-
-
-
-
-
-
-
-
-    pass

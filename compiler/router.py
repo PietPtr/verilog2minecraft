@@ -146,18 +146,6 @@ class Router:
         raise NoRouteFoundException(collision_output,
                                     f'Could not find route between {start} and {end}. Closest: {best}, start: {self._manhattan(start, end)}')
 
-    def fill_bb_with_placed_graph(self, placed: List[Cell]):
-        for cell in placed:
-            tl = cell.position
-            br = cell.position + cell.gate_version.size
-            allowed = [tuple(x) for x in cell.gate_version.output_positions.values()] + [tuple(x) for x in cell.gate_version.input_positions.values()]
-            for x in range(tl[0], br[0]):
-                for y in range(tl[1], br[1]):
-                    for z in range(tl[2], br[2]):
-                        if (x, y, z) in allowed:
-                            continue
-                        self.bounding_box_static.add((x, y, z))
-
     def recompute_bounding_box(self):
         self.bounding_box.clear()
         self.bounding_box.update(self.bounding_box_static)

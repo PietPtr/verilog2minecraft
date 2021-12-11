@@ -14,7 +14,6 @@ class Cell:
 
         self.position = None
         self.gate_version = None
-        self.rotation = None
         self.placed = False
     
     def set_outputs(self, outputs):
@@ -23,10 +22,9 @@ class Cell:
     def set_inputs(self, inputs):
         self.inputs = inputs
 
-    def place(self, position, gate_version, rotation):
+    def place(self, position, gate_version):
         self.position = position
         self.gate_version = gate_version
-        self.rotation = rotation
         self.placed = True
 
     def collides(self, position, size):
@@ -69,7 +67,7 @@ class Cell:
         if not self.placed:
             return f"Cell ({self.celltype} -> {[x[0].celltype for x in self.outputs]})"
         else:
-            return f"Placed Cell ({self.celltype} at {self.position[0]},{self.position[1]},{self.position[2]} {self.rotation})"
+            return f"Placed Cell ({self.celltype} at {self.position[0]},{self.position[1]},{self.position[2]} impl {self.gate_version.implementation_file})"
 
 
 def load_graph(filename):
