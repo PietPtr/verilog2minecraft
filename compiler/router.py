@@ -1,3 +1,4 @@
+import time
 from itertools import product
 from typing import List, Tuple, Set, Dict, Any, NamedTuple, Optional
 from enum import Enum
@@ -9,7 +10,7 @@ from util.coord import tupleAdd
 import heapq
 FOUR_DIRECTIONS = [(1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)]
 ALL_DIRECTIONS = [(x, y + a, z) for x, y, z in FOUR_DIRECTIONS for a in range(-1, 2)]
-
+print(ALL_DIRECTIONS)
 
 class BlockType(Enum):
     STONE = "stone"
@@ -52,23 +53,34 @@ class Router:
 
     def _find_route(self, start: Tuple[int, int, int], end: Tuple[int, int, int]) -> RouteNode:
         Q = []
-        heapq.heappush(Q, (self._manhattan(start, end), RouteNode(start, None, 0)))
-        while 0 < len(Q) < 10000:
-            heuristic, node = heapq.heappop(Q)
-            # print(heuristic,start, end, node)
-            # print(heuristic)
+        heapq.heappush(Q, (self._manhattan(start, end), 0, RouteNode(start, None, 0)))
+        best = self._manhattan(start, end)
+        visited = set()
+        while 0 < len(Q) < 1000:
+            heuristic, unused, node = heapq.heappop(Q)
             if node.point == end:
                 return node
-        
+
+            if heuristic < best:
+                best = heuristic
+
             previous_points = node.visited_points()
 
             for x, y, z in ALL_DIRECTIONS:
                 pos = tupleAdd((x, y, z), node.point)
-                if pos in previous_points or (pos in self.bounding_box - self.bounding_box_route.get(end, set())):
+                if pos != end and (
+                        pos in previous_points or
+                        (pos in self.bounding_box - self.bounding_box_route.get(end, set())) or
+                        (pos[0], pos[1] - 1, pos[2]) in previous_points or
+                        (pos[0], pos[1] - 2, pos[2]) in previous_points
+                ):
                     continue
-                heapq.heappush(Q, (self._manhattan(pos, end) + node.length, RouteNode(pos, node, node.length + 1)))
+                if pos in visited:
+                    continue
+                visited.add(pos)
+                heapq.heappush(Q, (self._manhattan(pos, end) + node.length + 1, -node.length, RouteNode(pos, node, node.length + 1)))
 
-        raise Exception(f'Could not find route between {start} and {end}')
+        raise Exception(f'Could not find route between {start} and {end}. Closest: {best}, start: {self._manhattan(start, end)}')
 
     def fill_bb_with_placed_graph(self, placed: List[Cell]):
         for cell in placed:
@@ -118,9 +130,11 @@ def route(placed_cells) -> List[Tuple[BlockType, Tuple[int, int, int]]]:
             for (to_cell, to_port_name) in to_cells:
                 start = cell.position + cell.gate_version.output_positions[from_port_name]
                 end = to_cell.position + to_cell.gate_version.input_positions[to_port_name]
+                print(cell, to_cell)
                 try:
                     router.make_route(to_cell, (start[0], start[1], start[2]), (end[0], end[1], end[2]))
                 except Exception as e:
+
                     print(e)
 
     return router.get_all_blocks()

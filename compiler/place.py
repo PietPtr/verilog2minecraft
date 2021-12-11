@@ -32,9 +32,9 @@ minecraft_cell_lib = {
     "$_OR_": [
         GateVersion("$_OR_",
             np.array([5, 3, 3]),
-            {"A": np.array([4, 2, 2]),
-             "B": np.array([0, 2, 2])},
-            {"Y": np.array([2, 2, 0])})
+            {"A": np.array([4, 1, 2]),
+             "B": np.array([0, 1, 2])},
+            {"Y": np.array([2, 1, 0])})
     ],
     "$_DFFE_PP0N_": [
         GateVersion("$_DFFE_PP0N_",
