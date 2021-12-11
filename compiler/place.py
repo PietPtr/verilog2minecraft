@@ -27,23 +27,23 @@ minecraft_cell_lib = {
         GateVersion("$_NOT_", 
             np.array([1, 3, 2]), 
             {"A": np.array([0, 0, 0])}, # pos + input_pos  = feed repeater in this block to drive input
-            {"Y": np.array([0, 1, 0])}) # pos + output_pos = block next to which a repeater can be placed
+            {"Y": np.array([0, 0, 4])}) # pos + output_pos = block next to which a repeater can be placed
         ], 
     "$_OR_": [
         GateVersion("$_OR_",
             np.array([3, 3, 2]),
-            {"A": np.array([0, 0, 0]),
-             "B": np.array([2, 0, 0])},
-            {"Y": np.array([1, 1, 0])})
+            {"A": np.array([4, 1, 2]),
+             "B": np.array([0, 1, 2])},
+            {"Y": np.array([2, 1, 0])})
     ],
     "$_DFFE_PP0N_": [
         GateVersion("$_DFFE_PP0N_",
             np.array([11, 3, 7]),
-            {"C": np.array([0, 0, 0]),
-             "R": np.array([2, 0, 0]),
-             "E": np.array([3, 1, 0]),
-             "D": np.array([1, 3, 0])},
-            {"Q": np.array([2, 3, 0])})
+            {"C": np.array([12, 1, 4]),
+             "R": np.array([3, 1, 6]),
+             "E": np.array([12, 1, 2]),
+             "D": np.array([12, 1, 0])},
+            {"Q": np.array([0, 1, 0])})
     ]
 }
 
