@@ -2,20 +2,17 @@ import numpy as np
 import random
 from pprint import pprint
 from enum import Enum
+from typing import Tuple, List, Dict
+import compiler.graph as graph
 
-class Rotation(Enum):
-    NORTH = 0
-    EAST = 90
-    SOUTH = 180
-    WEST = 270
 
 class GateVersion:
-    def __init__(self, celltype, size, input_positions, output_positions):
+    def __init__(self, celltype, size, input_positions, output_positions, implementation_file):
         self.celltype = celltype
         self.size = size
         self.input_positions = input_positions
         self.output_positions = output_positions
-        # self.implementation = ?implementation? # iets van een design file name of zo?
+        self.implementation_file = implementation_file # file name of the implemented gate
     
     def __repr__(self) -> str:
         return f"GateVersion {self.celltype} {self.size[0]}x{self.size[1]}x{self.size[2]}"
@@ -27,14 +24,16 @@ minecraft_cell_lib = {
         GateVersion("$_NOT_", 
             np.array([1, 3, 6]),
             {"A": np.array([0, 1, 0])}, # pos + input_pos  = feed repeater in this block to drive input
-            {"Y": np.array([0, 1, 5])}) # pos + output_pos = block next to which a repeater can be placed
-        ], 
+            {"Y": np.array([0, 1, 5])}, # pos + output_pos = block next to which a repeater can be placed
+            "$_NOT_")
+        ],
     "$_OR_": [
         GateVersion("$_OR_",
             np.array([5, 3, 3]),
             {"A": np.array([4, 1, 2]),
              "B": np.array([0, 1, 2])},
-            {"Y": np.array([2, 1, 0])})
+            {"Y": np.array([2, 1, 0])},
+            "$_OR_")
     ],
     "$_DFFE_PP0N_": [
         GateVersion("$_DFFE_PP0N_",
@@ -43,7 +42,8 @@ minecraft_cell_lib = {
              "R": np.array([6, 1, 10]),
              "E": np.array([2, 1, 0]),
              "D": np.array([0, 1, 0])},
-            {"Q": np.array([2, 1, 12])})
+            {"Q": np.array([2, 1, 12])},
+            "$_DFFE_PP0N_")
     ]
 }
 
@@ -64,7 +64,7 @@ def place_random(graph, seed):
 
     def random_pos():
         location = (np.random.rand(3) * (x_size - 4)).astype(int)
-        location[1] = 3
+        location[1] = 4
         return location
 
     max_collision_tries = 0
@@ -82,10 +82,8 @@ def place_random(graph, seed):
 
         max_collision_tries = max(max_collision_tries, collision_tries)
 
-        cell.place(position, gv, Rotation.NORTH)
+        cell.place(position, gv)
         placed_cells.append(cell)
-
-    # print(f"Placed randomly, result distance score: {manhattan_distance(graph)}, {max_collision_tries} collision tries.")
 
     return (graph, max_collision_tries)
 
@@ -134,3 +132,21 @@ def random_search(graph):
     
     (result, tries) = place_random(graph, best_placed_seed)
     return result
+
+def placed_to_netmap(placed: List[graph.Cell]) -> Dict[Tuple[int, int, int], List[Tuple[int, int, int]]]:
+    def arr_to_tuple(arr):
+        return (arr[0], arr[1], arr[2])
+
+    netmap = dict()
+    for from_cell in placed:
+        for (from_port_name, to_cells) in from_cell.outputs.items():
+            out_pos = from_cell.position + from_cell.gate_version.output_positions[from_port_name]
+            in_positions = []
+            for (to_cell, to_port_name) in to_cells:
+                in_positions.append(
+                    to_cell.position + to_cell.gate_version.input_positions[to_port_name])
+            
+            netmap[arr_to_tuple(out_pos)] = list(map(arr_to_tuple, in_positions))
+
+    return netmap
+    

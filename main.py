@@ -5,13 +5,15 @@ from minecraft.components import ComponentManager
 from dotenv import load_dotenv
 import os
 from util.coord import tupleAdd
+from pprint import pprint
 
 load_dotenv()
 
-unplaced = graph.load_graph("jsons/combi.json")
+unplaced = graph.load_graph("jsons/test.json")
 # placed = place_and_route(unplaced) 
 placed = place.random_search(unplaced)
-redstone_tracks = router.route(placed)
+netmap = place.placed_to_netmap(placed)
+redstone_tracks = router.route(netmap)
 
 
 minecraft = World()
