@@ -55,7 +55,7 @@ def collides_with_any(position, size, placed_cells):
 
 
 def place_random(graph, seed):
-    x_size = int(len(graph) * 1)
+    x_size = int(len(graph) * 3)
     y_size = x_size
 
     np.random.seed(seed)
@@ -85,14 +85,15 @@ def place_random(graph, seed):
         cell.place(position, gv, Rotation.NORTH)
         placed_cells.append(cell)
 
-    print(f"Placed randomly, result distance score: {manhattan_distance(graph)}, {max_collision_tries} collision tries.")
+    # print(f"Placed randomly, result distance score: {manhattan_distance(graph)}, {max_collision_tries} collision tries.")
 
-    return graph
+    return (graph, max_collision_tries)
 
 def manhattan_distance(graph):
     sum = 0
     for cell in graph:
         for (dest, port_name) in cell.outputs:
+            # TODO: hier moet je naar output _port_ locations
             dist = np.abs(dest.position - cell.position).sum() ** 2
             sum += dist
 
@@ -101,15 +102,26 @@ def manhattan_distance(graph):
 def random_search(graph):
     best_distance = float("inf")
     best_placed_seed = 0
+    total_dist = 0
+    total_tries = 0
 
     seed1 = random.randint(0, 2**32 - 1)
+    iterations = 1000
 
-    for i in range(1000):
+    for i in range(iterations):
         seed = (i * seed1) & 0xffffffff
-        placed = place_random(graph, seed)
+        (placed, collision_tries) = place_random(graph, seed)
         dist = manhattan_distance(placed)
+        total_dist += dist
+        total_tries += collision_tries
         if dist < best_distance:
             best_distance = dist
             best_placed_seed = seed
+
+    print(f"Placed {iterations} iterations randomly:")
+    print(f"\tAverage distance: {total_dist // iterations}")
+    print(f"\tAverage collision tries: {total_tries / iterations}")
+    print(f"\tBest distance: {best_distance}")
     
-    return place_random(graph, best_placed_seed)
+    (result, tries) = place_random(graph, best_placed_seed)
+    return result
