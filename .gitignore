@@ -6,3 +6,4 @@ examples/verilog
 logs/
 .idea/
 __pycache__/
+.env

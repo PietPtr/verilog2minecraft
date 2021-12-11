@@ -55,7 +55,7 @@ def collides_with_any(position, size, placed_cells):
 
 
 def place_random(graph, seed):
-    x_size = int(len(graph) * 0.55)
+    x_size = int(len(graph) * 2)
     y_size = x_size
 
     np.random.seed(seed)
@@ -93,6 +93,7 @@ def manhattan_distance(graph):
     sum = 0
     for cell in graph:
         for (dest, port_name) in cell.outputs:
+            # TODO: hier moet je naar output _port_ locations
             dist = np.abs(dest.position - cell.position).sum() ** 2
             sum += dist
 
