@@ -1,6 +1,6 @@
 import json
 from pprint import pprint
-from compiler.cell_defs import *
+import compiler.cell_defs as cell_defs
 
 import numpy as np
 
@@ -89,9 +89,9 @@ def read_constraints(filename):
     return io_constraints
 
 
-def load_graph(yosys_json, constraint_file):
+def load_graph(yosys_json, constraint_file, components):
     yosys = json.load(open(yosys_json))
-
+    cell_defs.build(components.models, yosys)
     constraints = read_constraints(constraint_file)
 
     if len(yosys['modules']) > 1:

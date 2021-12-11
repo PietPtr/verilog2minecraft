@@ -14,9 +14,29 @@ class GateVersion:
     def __repr__(self) -> str:
         return f"GateVersion {self.celltype} {self.size[0]}x{self.size[1]}x{self.size[2]}"
 
-def build(models : List[minecraft.world.Model]) -> Dict[str, List[GateVersion]]:
+def build(models : Dict[str, minecraft.world.Model], cell_json) -> Dict[str, List[GateVersion]]:
+    global minecraft_cell_lib
+    
+    for (model_name, model) in models.items():
+        if model_name != "$_NOT_":
+            continue
+        
+        input_positions = []
+        output_positions = []
+        print(model_name, model.yosys_name)
 
-    pass
+        for (wool, location) in model.ports.items():
+            # print(wool, location)
+            port_name = wool_map[model.yosys_name][wool]
+            
+
+        gv = GateVersion(
+            model.yosys_name,
+            model.size,
+            input_positions,
+            output_positions,
+            model_name
+        )
 
 wool_map = {
     "$_NOT_": {
@@ -40,12 +60,12 @@ wool_map = {
     }
 }
 
-# minecraft_cell_lib = {
+minecraft_cell_lib = {
 
-# }
+}
 
 # every size, position, etc is x y z
-minecraft_cell_lib = {
+minecraft_cell_lib_old = {
     # TODO: beetje dubbele administratie zo, wsch is de celltype property dan niet nodig
     "$_NOT_": [
         GateVersion("$_NOT_", 
