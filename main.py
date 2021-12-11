@@ -1,4 +1,5 @@
-from compiler import graph, place, router
+from compiler import graph, place
+from compiler.daanpnr import place_and_route
 from minecraft.world import World
 from minecraft.components import ComponentManager
 from dotenv import load_dotenv
@@ -7,8 +8,8 @@ import os
 load_dotenv()
 
 unplaced = graph.load_graph("test.json")
-placed = place.random_search(unplaced)
-routed = router.route(placed)
+placed = place_and_route(unplaced)  # place.random_search(unplaced)
+# routed = router.route(placed)
 
 
 minecraft = World()
