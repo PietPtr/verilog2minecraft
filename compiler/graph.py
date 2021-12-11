@@ -17,7 +17,7 @@ class Cell:
         self.placed = False
     
     def set_outputs(self, outputs):
-        self.outputs = outputs # [(cell, input port)]
+        self.outputs = outputs # {output_port: (cell, input port)}
 
     def place(self, position, gate_version, rotation):
         self.position = position
@@ -102,14 +102,17 @@ def load_graph(filename):
 
 
 def find_outputs(partial_cell, cells):
-    output_cells = []
+    output_cells = {}
     for output in partial_cell.output_ports:
         (output_port, output_net_id) = output
         for cell in cells:
             for input in cell.input_ports:
                 (port_name, input_net_id) = input
                 if output_net_id == input_net_id:
-                    output_cells.append((cell, port_name))
+                    if output_port in output_cells:
+                        output_cells[output_port].append((cell, port_name))
+                    else:
+                        output_cells[output_port] = [(cell, port_name)]
 
     partial_cell.set_outputs(output_cells)
 

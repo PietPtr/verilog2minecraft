@@ -91,11 +91,14 @@ def place_random(graph, seed):
 
 def manhattan_distance(graph):
     sum = 0
-    for cell in graph:
-        for (dest, port_name) in cell.outputs:
-            # TODO: hier moet je naar output _port_ locations
-            dist = np.abs(dest.position - cell.position).sum() ** 2
-            sum += dist
+    for from_cell in graph:
+        for (from_port_name, to_cells) in from_cell.outputs.items():
+            for (to_cell, to_port_name) in to_cells:
+                out_pos = from_cell.position + from_cell.gate_version.output_positions[from_port_name]
+                in_pos = to_cell.position + to_cell.gate_version.input_positions[to_port_name]
+                dist = np.abs(out_pos - in_pos).sum() ** 2
+                sum += dist
+                pass
 
     return sum
 
