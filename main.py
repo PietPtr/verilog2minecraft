@@ -15,8 +15,8 @@ minecraft = World()
 components = ComponentManager()
 
 unplaced = graph.load_graph("jsons/combi.json", "constraints.txt", components)
-# placed = place_and_route(unplaced) 
-placed = place.random_search(unplaced)
+placed = place_and_route(unplaced)
+# placed = place.random_search(unplaced)
 netmap = place.placed_to_netmap(placed)
 
 offset = (0, 2, 0)
