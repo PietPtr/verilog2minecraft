@@ -25,12 +25,12 @@ static_bounding_box: Set[Tuple[int, int, int]] = set()
 
 for cell in placed:
     model = components.get_model(cell.celltype)
-    # model.fill_area(cell.gate_version.size)
     position = tupleAdd(cell.position, offset)
     minecraft.add_model(position, model)
-    static_bounding_box.update(tupleAdd(position, pos) for pos in model.bounding_box)
+    minecraft.add_model_bounding(tupleAdd(position, (0, 20, 0)), model)
+    static_bounding_box.update(tupleAdd(cell.position, pos) for pos in model.bounding_box)
 
-minecraft.build(os.getenv("HOME") + "/.minecraft/saves/output")
+minecraft.build(os.getenv("HOME") + "/.minecraft/saves/output_before")
 
 redstone_tracks = router.create_routes(netmap, static_bounding_box)
 

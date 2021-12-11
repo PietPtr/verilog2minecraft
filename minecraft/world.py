@@ -43,6 +43,12 @@ class World:
     def set_block(self, position: Tuple[int, int, int], block: Block):
         self.blocks[position] = block
 
+    def add_model_bounding(self, position: Tuple[int, int, int], model: Model):
+        for coords, block in model.blocks.items():
+            self.set_block(tupleAdd(position, coords), block)
+        for coords in model.bounding_box:
+            self.set_block(tupleAdd(position, coords), Block('minecraft', 'glass'))
+
     def add_model(self, position: Tuple[int, int, int], model: Model):
         for coords, block in model.blocks.items():
             self.set_block(tupleAdd(position, coords), block)
@@ -65,7 +71,7 @@ class World:
                             ports[WoolType(block[0].base_name)] = (x, y+1, z)
                             blocks[(x, y, z)] = block[0]
                         else:
-                            if block[0].base_name == 'stone':
+                            if block[0].base_name in ['stone', 'redstone_wire', 'repeater', 'redstone_torch', 'redstone_wall_torch']:
                                 bounding_box.add((x, y, z))
                             blocks[(x, y, z)] = block[0]
         minecraft.close()
@@ -84,7 +90,7 @@ class World:
         return Model(blocks, bounding_box, ports, size, yosys_name, name)
 
     def build(self, path: str):
-        os.system(f"rm -r {path} && cp -r minecraft/data/flat {path}")
+        os.system(f"rm -r {path}; cp -r minecraft/data/flat {path}")
         minecraft = amulet.load_level(path)
         for coords, block in self.blocks.items():
             minecraft.set_version_block(coords[0], coords[1], coords[2], "minecraft:overworld", mc_version, block)
