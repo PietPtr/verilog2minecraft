@@ -15,7 +15,7 @@ minecraft = World()
 components = ComponentManager()
 cell_lib = cell_defs.build(components.models)
 
-unplaced = graph.load_graph("jsons/combi.json", "constraints.txt")
+unplaced = graph.load_graph("jsons/test.json", "constraints.txt")
 # placed = place_and_route(unplaced) 
 placed = place.random_search(unplaced)
 netmap = place.placed_to_netmap(placed)
