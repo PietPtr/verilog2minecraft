@@ -16,6 +16,7 @@ class Cell:
         self.position = None
         self.gate_version = None
         self.placed = False
+        self.freeze_placement = False
     
     def set_outputs(self, outputs):
         self.outputs = outputs # {output_port: (cell, input port)}
@@ -24,9 +25,13 @@ class Cell:
         self.inputs = inputs
 
     def place(self, position, gate_version):
-        self.position = position
-        self.gate_version = gate_version
-        self.placed = True
+        if not self.freeze_placement:
+            self.position = position
+            self.gate_version = gate_version
+            self.placed = True
+
+    def freeze(self):
+        self.freeze_placement = True
 
     def collides(self, position, size):
         if self.gate_version is None or self.position is None:
@@ -91,7 +96,7 @@ def read_constraints(filename):
 
 def load_graph(yosys_json, constraint_file, components):
     yosys = json.load(open(yosys_json))
-    
+
     if len(yosys['modules']) > 1:
         print("_your design is not flattened. Run `flatten' in _yosys when synthesizing your design.")
         exit()
@@ -100,11 +105,9 @@ def load_graph(yosys_json, constraint_file, components):
     cell_defs.build(components.models, top)
     constraints = read_constraints(constraint_file)
 
-
-
     graph = []
 
-    # add_outputs_to_graph(graph, constraints, top['ports'])
+    add_outputs_to_graph(graph, constraints, top['ports'])
 
     for (cell, cellinfo) in top['cells'].items():
         inputs = []
@@ -123,7 +126,7 @@ def load_graph(yosys_json, constraint_file, components):
         find_outputs(partial_cell, graph)
         find_inputs(partial_cell, graph)
 
-    # add_inputs_to_graph(graph, constraints, top['ports'])
+    add_inputs_to_graph(graph, constraints, top['ports'])
 
     return graph
 
@@ -162,9 +165,10 @@ def add_outputs_to_graph(graph, constraints, port_json):
     for (port_name, data) in port_json.items():
         if data['direction'] == 'output':
             net_id = data['bits'][0] # Assume 1-bit I/O
+
             o_cell = Cell(port_name + '_output', 'OUTPUT', [('DRIVEN', net_id)], [])
-            
-            o_cell.place(constraints[port_name], minecraft_cell_lib['OUTPUT'][0])
+            o_cell.place(constraints[port_name], cell_defs.minecraft_cell_lib['OUTPUT'][0])
+            o_cell.freeze()
             graph.append(o_cell)
     
     return graph
@@ -174,10 +178,14 @@ def add_inputs_to_graph(graph, constraints, port_json):
     for (port_name, data) in port_json.items():
         if data['direction'] == 'input':
             net_id = data['bits'][0] # Assume 1-bit I/O
+            # i_cell = Cell(port_name + '_input', '$_NOT_', [], [('A', 7778), ('Y', net_id)])
+            # i_cell.place(constraints[port_name], cell_defs.minecraft_cell_lib['$_NOT_'][0])
+
+
             i_cell = Cell(port_name + '_input', 'INPUT', [], [('DRIVES', net_id)])
-            
+            i_cell.place(constraints[port_name], cell_defs.minecraft_cell_lib['INPUT'][0])
+            i_cell.freeze()
             find_outputs(i_cell, graph)
-            i_cell.place(constraints[port_name], minecraft_cell_lib['INPUT'][0])
             graph.append(i_cell)
     
     return graph

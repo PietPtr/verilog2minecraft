@@ -20,13 +20,12 @@ def build(models : Dict[str, minecraft.world.Model], cell_json) -> Dict[str, Lis
     global minecraft_cell_lib
 
     for (model_name, model) in models.items():
-        if not (model_name in ["$_NOT_", "$_OR_", "$_DFFE_PP0N_"]):
+        if not (model_name in ["$_NOT_", "$_OR_", "$_DFFE_PP0N_", "INPUT", "OUTPUT"]):
             continue
         
         input_positions = dict()
         output_positions = dict()
-        print(model_name)
-
+        
         for (wool, location) in model.ports.items():
             # print(wool, location)
             port_data = wool_map[model.yosys_name][wool]
@@ -42,9 +41,6 @@ def build(models : Dict[str, minecraft.world.Model], cell_json) -> Dict[str, Lis
             output_positions,
             model_name
         )
-
-        pprint(input_positions)
-        pprint(output_positions)
 
         if not (model.yosys_name in minecraft_cell_lib):
             minecraft_cell_lib[model.yosys_name] = []
@@ -100,7 +96,16 @@ wool_map = {
         },
     },
     "INPUT": {
-
+        WoolType.GREEN_WOOL: {
+            "name": "DRIVES",
+            "direction": "output"
+        }
+    },
+    "OUTPUT": {
+        WoolType.WHITE_WOOL: {
+            "name": "DRIVEN",
+            "direction": "input"
+        }
     }
 }
 
