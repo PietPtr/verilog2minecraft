@@ -87,6 +87,7 @@ class Router:
                 positions_to_check = {pos, tupleAdd(pos, (0, 1, 0)), tupleAdd(pos, (0, -1, 0))}
                 if pos != end and (
                         positions_to_check.intersection(previous_points) != set() or
+                        tupleAdd(pos, (0, 2, 0)) in previous_points or
                         positions_to_check.intersection(self.bounding_box_static) != set() or
                         positions_to_check.intersection(self.bounding_box - self.bounding_box_route.get(original_start, set())) != set()
                 ):
