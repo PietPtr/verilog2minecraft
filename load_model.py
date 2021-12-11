@@ -4,7 +4,7 @@ from minecraft.world import World
 if __name__ == "__main__":
     if len(sys.argv) != 5:
         print("Usage: python load_model.py <world path> <origin coords> <end coords> <name>")
-        print("E.g. python load_model.py /home/daan/.minecraft/saves/design 0,2,0 3,2,2 flipflop")
+        print("E.g. python load_model.py /home/daan/.minecraft/saves/epic 0,2,0 3,2,2 flipflop")
     world = World()
     start = tuple(map(int, sys.argv[2].split(',')))
     end = tuple(map(int, sys.argv[3].split(',')))

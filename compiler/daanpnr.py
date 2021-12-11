@@ -20,7 +20,7 @@ def place_and_route(unplaced):
             cell.place(np.array([0, 5, 0]), gv)
         else:
             new_position = np.array(placer.position)
-            new_position[0] += placer.gate_version.size[0] + 5
+            new_position[0] += placer.gate_version.size[0] + 1
             while collides_with_any(new_position, gv.size, placed_cells):
                 # print("position collides:", new_position)
                 new_position[0] += random.randint(-2, 2)
