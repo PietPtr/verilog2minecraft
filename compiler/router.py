@@ -13,7 +13,8 @@ from util.wool import WoolType
 
 FOUR_DIRECTIONS = [(1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)]
 ALL_DIRECTIONS = [(x, y + a, z) for x, y, z in FOUR_DIRECTIONS for a in range(-1, 2)]
-print(ALL_DIRECTIONS)
+BOUNDING_DIRECTIONS = list(product(range(-1, 2), range(-2, 2), range(-1, 2)))
+
     
 class BlockType(Enum):
     STONE = "stone"
@@ -54,13 +55,18 @@ class Router:
     bounding_box_route: Dict[Tuple[int, int, int], Set[Tuple[int, int, int]]]
     all_routes: Dict[Tuple[int, int, int], List[Tuple[BlockType, Tuple[int, int, int]]]]
     blocks_to_route_starts: Dict[Tuple[int, int, int], Set[Tuple[int, int, int]]]
+    network: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]]
 
-    def __init__(self, static_bounding_box: Set[Tuple[int, int, int]]):
+    def __init__(self, network: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]], static_bounding_box: Set[Tuple[int, int, int]]):
         self.bounding_box = set()
         self.bounding_box_static = static_bounding_box
         self.all_routes = dict()
         self.bounding_box_route = dict()
         self.blocks_to_route_starts = dict()
+        self.network = network
+        self.end_points = set()
+        for endpoints in self.network.values():
+            self.end_points.update(endpoints)
         self.recompute_bounding_box()
 
     def _manhattan(self, a: Tuple[int, int, int], b: Tuple[int, int, int]):
@@ -80,14 +86,17 @@ class Router:
             if self._manhattan(node.point, end) < best:
                 best = self._manhattan(node.point, end)
 
-            previous_points = node.visited_points()
+            previous_points = node.visited_points().union({end})
 
             for x, y, z in ALL_DIRECTIONS:
                 pos = tupleAdd((x, y, z), node.point)
                 positions_to_check = {pos, tupleAdd(pos, (0, 1, 0)), tupleAdd(pos, (0, -1, 0))}
+                own_bounding = set([tupleAdd(pos, offset) for offset in BOUNDING_DIRECTIONS])
                 if pos != end and (
+                        own_bounding.intersection(self.end_points - {end}) != set() or
                         positions_to_check.intersection(previous_points) != set() or
                         tupleAdd(pos, (0, 2, 0)) in previous_points or
+                        tupleAdd(pos, (0, -2, 0)) in previous_points or
                         positions_to_check.intersection(self.bounding_box_static) != set() or
                         positions_to_check.intersection(self.bounding_box - self.bounding_box_route.get(original_start, set())) != set()
                 ):
@@ -145,7 +154,7 @@ class Router:
             wool_idx = sum(start)
             result.append((WoolType.num_to_wool(wool_idx), (node.point[0], node.point[1] - 1, node.point[2])))
             result.append((BlockType.REDSTONE, (node.point[0], node.point[1], node.point[2])))
-            for x, y, z in product(range(-1, 2), range(-2, 2), range(-1, 2)):
+            for x, y, z in BOUNDING_DIRECTIONS:
                 pos = tupleAdd((x, y, z), node.point)
                 self.bounding_box.add(pos)
                 self.bounding_box_route[start].add(pos)
@@ -167,7 +176,7 @@ class Router:
 
 def create_routes(network: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]],
                   component_bounding_box: Set[Tuple[int, int, int]]) -> List[Tuple[BlockType, Tuple[int, int, int]]]:
-    router = Router(component_bounding_box)
+    router = Router(network, component_bounding_box)
     todo = [start for start in network.keys()]
     while len(todo) > 0:
         start = todo.pop(0)
