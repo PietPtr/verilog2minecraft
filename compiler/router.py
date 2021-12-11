@@ -87,8 +87,9 @@ class Router:
                 if pos != end and (
                         pos in previous_points or
                         (pos in self.bounding_box - self.bounding_box_route.get(original_start, set())) or
+                        ((pos[0], pos[1] - 1, pos[2]) in self.bounding_box - self.bounding_box_route.get(original_start, set())) or
                         (pos[0], pos[1] - 1, pos[2]) in previous_points or
-                        (pos[0], pos[1] - 2, pos[2]) in previous_points
+                        (pos[0], pos[1] + 1, pos[2]) in previous_points
                 ):
                     collision_output = self.blocks_to_route_starts.get(pos, None) or \
                                        self.blocks_to_route_starts.get((pos[0], pos[1] - 1, pos[2]), None) or \
