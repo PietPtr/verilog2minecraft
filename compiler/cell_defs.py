@@ -2,6 +2,8 @@ import numpy as np
 import minecraft.world
 from typing import Tuple, List, Dict
 from util.wool import *
+import util.coord as tup
+from pprint import pprint
 
 class GateVersion:
     def __init__(self, celltype, size, input_positions, output_positions, implementation_file):
@@ -16,19 +18,22 @@ class GateVersion:
 
 def build(models : Dict[str, minecraft.world.Model], cell_json) -> Dict[str, List[GateVersion]]:
     global minecraft_cell_lib
-    
+
     for (model_name, model) in models.items():
-        if model_name != "$_NOT_":
+        if not (model_name in ["$_NOT_", "$_OR_", "$_DFFE_PP0N_"]):
             continue
         
-        input_positions = []
-        output_positions = []
-        print(model_name, model.yosys_name)
+        input_positions = dict()
+        output_positions = dict()
+        print(model_name)
 
         for (wool, location) in model.ports.items():
             # print(wool, location)
-            port_name = wool_map[model.yosys_name][wool]
-            
+            port_data = wool_map[model.yosys_name][wool]
+            if port_data['direction'] == 'input':
+                input_positions[port_data["name"]] = tup.to_np(location)
+            elif port_data['direction'] == 'output':
+                output_positions[port_data["name"]] = tup.to_np(location)        
 
         gv = GateVersion(
             model.yosys_name,
@@ -38,31 +43,68 @@ def build(models : Dict[str, minecraft.world.Model], cell_json) -> Dict[str, Lis
             model_name
         )
 
+        pprint(input_positions)
+        pprint(output_positions)
+
+        if not (model.yosys_name in minecraft_cell_lib):
+            minecraft_cell_lib[model.yosys_name] = []
+        
+        minecraft_cell_lib[model.yosys_name].append(gv)
+
+
 wool_map = {
     "$_NOT_": {
-        WoolType.WHITE_WOOL: "A",
-        WoolType.GREEN_WOOL: "Y"
+        WoolType.WHITE_WOOL: {
+            "name": "A",
+            "direction": "input" 
+        },
+        WoolType.GREEN_WOOL: {
+            "name": "Y",
+            "direction": "output"
+        }
     },
     "$_OR_": {
-        WoolType.WHITE_WOOL: "A",
-        WoolType.BLACK_WOOL: "B",
-        WoolType.GREEN_WOOL: "Y"
+        WoolType.WHITE_WOOL: {
+            "name": "A",
+            "direction": "input" 
+        },
+        WoolType.BLACK_WOOL: {
+            "name": "B",
+            "direction": "input" 
+        },
+        WoolType.GREEN_WOOL: {
+            "name": "Y",
+            "direction": "output" 
+        }
     },
     "$_DFFE_PP0N_": {
-        WoolType.ORANGE_WOOL: "R",
-        WoolType.MAGENTA_WOOL: "Q",
-        WoolType.LIGHT_BLUE_WOOL: "D",
-        WoolType.YELLOW_WOOL: "C",
-        WoolType.LIME_WOOL: "E"
+        WoolType.ORANGE_WOOL: {
+            "name": "R",
+            "direction": "input" 
+        },
+        WoolType.MAGENTA_WOOL: {
+            "name": "Q",
+            "direction": "output" 
+        },
+        WoolType.LIGHT_BLUE_WOOL: {
+            "name": "D",
+            "direction": "input" 
+        },
+        WoolType.YELLOW_WOOL: {
+            "name": "C",
+            "direction": "input" 
+        },
+        WoolType.LIME_WOOL: {
+            "name": "E",
+            "direction": "input" 
+        },
     },
     "INPUT": {
 
     }
 }
 
-minecraft_cell_lib = {
-
-}
+minecraft_cell_lib = dict()
 
 # every size, position, etc is x y z
 minecraft_cell_lib_old = {

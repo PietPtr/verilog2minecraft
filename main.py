@@ -28,7 +28,7 @@ for cell in placed:
     # model.fill_area(cell.gate_version.size)
     position = tupleAdd(cell.position, offset)
     minecraft.add_model(position, model)
-    # static_bounding_box.update(tupleAdd(position, pos) for pos in model.bounding_box)
+    static_bounding_box.update(tupleAdd(position, pos) for pos in model.bounding_box)
 
 minecraft.build(os.getenv("HOME") + "/.minecraft/saves/output")
 

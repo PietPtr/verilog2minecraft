@@ -91,14 +91,16 @@ def read_constraints(filename):
 
 def load_graph(yosys_json, constraint_file, components):
     yosys = json.load(open(yosys_json))
-    cell_defs.build(components.models, yosys)
-    constraints = read_constraints(constraint_file)
-
+    
     if len(yosys['modules']) > 1:
         print("_your design is not flattened. Run `flatten' in _yosys when synthesizing your design.")
         exit()
-
+        
     top = list(yosys['modules'].items())[0][1]
+    cell_defs.build(components.models, top)
+    constraints = read_constraints(constraint_file)
+
+
 
     graph = []
 
