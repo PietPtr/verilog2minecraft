@@ -10,19 +10,6 @@ from compiler.cell_defs import *
 
 
 
-def generate_4_rotation_versions(gv : GateVersion) -> List[GateVersion]:
-    def rotate(v, angle):
-        return tup.to_np(rotate(tup.to_tup(v), angle))
-
-    versions = []
-    for angle in range(0, 360, 90):
-        # new_gv = GateVersion(
-        #         gv.name + "_" + str(angle),
-        #         rotate(gv.size, angle),
-        #         {p: rotate(p, )}
-                
-        #     )
-        pass
 
 def collides_with_any(position, size, placed_cells):
     for placed in placed_cells:
@@ -41,7 +28,7 @@ def place_random(graph, seed):
 
     def random_pos():
         location = (np.random.rand(3) * (x_size - 4)).astype(int)
-        # location[1] = 4
+        # location[1] = 5
         return location
 
     max_collision_tries = 0
@@ -51,7 +38,10 @@ def place_random(graph, seed):
         collision_tries = 0
         while collides:
             position = random_pos()
-            gv = random.choice(minecraft_cell_lib[cell.celltype])
+            gv = minecraft_cell_lib[cell.celltype][0]
+            if cell.celltype == "$_NOT_":
+                # gv = random.choice(minecraft_cell_lib[cell.celltype]) # 152 @ 193_000 / 200_000 (*3, combi)
+                gv = minecraft_cell_lib[cell.celltype][0] # 168 @ 97000 / 200_000
 
             collides = collides_with_any(position, gv.size, placed_cells)
             if collides:
@@ -94,11 +84,11 @@ def random_search(graph):
             best_distance = dist
             best_placed_seed = seed
         
-        if collision_tries > 50:
+        if collision_tries > 120:
             print(f"High amount of collisions ({collision_tries}) in placer, provide more space.")
         
         if i % 100 == 0:
-            print(f"Random placer iteration {i}...")
+            print(f"Random placer iteration {i}, best so far: {best_distance}...")
 
     print(f"Placed {iterations} iterations randomly:")
     print(f"\tAverage distance: {total_dist // iterations}")
@@ -140,3 +130,20 @@ def placed_cell_bb(placed: List[graph.Cell]):
                     bounding_box.add((x, y, z))
     
     return bounding_box
+
+
+def place_sa(graph):
+    def temperature(k):
+        T_0 = 100
+        a = 0.95
+        return T_0 * (a ** k)
+
+    # generate 100 random placements and take the best
+    
+    k_max = 100
+    for k in range(0, k_max):
+        temp = temperature(k)
+        if k % 10 == 0:
+            print(f"{k}: temp = {round(temp*100)/100}")
+
+    return graph
