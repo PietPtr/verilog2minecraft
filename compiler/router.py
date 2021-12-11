@@ -84,12 +84,11 @@ class Router:
 
             for x, y, z in ALL_DIRECTIONS:
                 pos = tupleAdd((x, y, z), node.point)
+                positions_to_check = {pos, tupleAdd(pos, (0, 1, 0)), tupleAdd(pos, (0, -1, 0))}
                 if pos != end and (
-                        pos in previous_points or
-                        (pos in self.bounding_box - self.bounding_box_route.get(original_start, set())) or
-                        ((pos[0], pos[1] - 1, pos[2]) in self.bounding_box - self.bounding_box_route.get(original_start, set())) or
-                        (pos[0], pos[1] - 1, pos[2]) in previous_points or
-                        (pos[0], pos[1] + 1, pos[2]) in previous_points
+                        positions_to_check.intersection(previous_points) != set() or
+                        positions_to_check.intersection(self.bounding_box_static) != set() or
+                        positions_to_check.intersection(self.bounding_box - self.bounding_box_route.get(original_start, set())) != set()
                 ):
                     collision_output = self.blocks_to_route_starts.get(pos, None) or \
                                        self.blocks_to_route_starts.get((pos[0], pos[1] - 1, pos[2]), None) or \
