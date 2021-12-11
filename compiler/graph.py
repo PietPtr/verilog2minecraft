@@ -33,7 +33,7 @@ class Cell:
         if self.gate_version is None or self.position is None:
             return False
 
-        SPACER = np.array([2, 2, 1])
+        SPACER = np.array([0, 0, 0])
 
         a_pos = self.position - SPACER
         a_size = self.gate_version.size + SPACER
@@ -65,9 +65,6 @@ class Cell:
             (a_min_y <= b_max_y and a_max_y >= b_min_y) and
             (a_min_z <= b_max_z and a_max_z >= b_min_z))
 
-
-        
-    
     def __repr__(self):
         if not self.placed:
             return f"Cell ({self.celltype} -> {[x[0].celltype for x in self.outputs]})"
@@ -101,6 +98,7 @@ def load_graph(filename):
     
     for (partial_cell) in graph:
         find_outputs(partial_cell, graph)
+        find_inputs(partial_cell, graph)
 
     return graph
 
