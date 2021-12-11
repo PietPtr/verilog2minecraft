@@ -63,6 +63,7 @@ class World:
                             bounding_box.add((x, y, z))
                         elif block[0].base_name in [wool.value for wool in WoolType]:
                             ports[WoolType(block[0].base_name)] = (x, y+1, z)
+                            blocks[(x, y, z)] = block[0]
                         else:
                             if block[0].base_name == 'stone':
                                 bounding_box.add((x, y, z))
