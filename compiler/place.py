@@ -148,16 +148,17 @@ def placed_to_netmap(placed: List[graph.Cell]) -> Dict[Tuple[int, int, int], Lis
             netmap[arr_to_tuple(out_pos)] = list(map(arr_to_tuple, in_positions))
 
     return netmap
-    
-def placed_cell_bb(self, placed: List[graph.Cell]):
+
+
+def placed_cell_bb(placed: List[graph.Cell]):
     bounding_box = set()
     for cell in placed:
         tl = cell.position
         br = cell.position + cell.gate_version.size
         allowed = [tuple(x) for x in cell.gate_version.output_positions.values()] + [tuple(x) for x in cell.gate_version.input_positions.values()]
-        for x in range(tl[0], br[0] + 1):
-            for y in range(tl[1], br[1] + 1):
-                for z in range(tl[2], br[2] + 1):
+        for x in range(tl[0], br[0]):
+            for y in range(tl[1], br[1]):
+                for z in range(tl[2], br[2]):
                     if (x, y, z) in allowed:
                         continue
                     bounding_box.add((x, y, z))

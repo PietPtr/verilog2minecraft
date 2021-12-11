@@ -12,7 +12,7 @@ class Component:
 
 
 class ComponentManager:
-    components: Dict[str, Component]
+    components: Dict[str, Model]
 
     def __init__(self):
         self.components = {}
@@ -20,5 +20,5 @@ class ComponentManager:
             with open(f'minecraft/data/components/{fname}', 'rb') as f:
                 self.components[fname] = pickle.load(f)
 
-    def get_component(self, name: str) -> Component:
+    def get_component(self, name: str) -> Model:
         return self.components[name]
