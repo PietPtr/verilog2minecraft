@@ -9,7 +9,7 @@ from pprint import pprint
 
 load_dotenv()
 
-unplaced = graph.load_graph("jsons/test.json")
+unplaced = graph.load_graph("jsons/combi.json", "constraints.txt")
 # placed = place_and_route(unplaced) 
 placed = place.random_search(unplaced)
 netmap = place.placed_to_netmap(placed)

@@ -69,9 +69,28 @@ class Cell:
         else:
             return f"Placed Cell ({self.celltype} at {self.position[0]},{self.position[1]},{self.position[2]} impl {self.gate_version.implementation_file})"
 
+def read_constraints(filename):
+    def parse_constraint(line):
+        port_name = line.split(":")[0]
+        coords = line.split(":")[1].split(",")
+        return {
+            'port_name': port_name,
+            'coords': np.array([coords[0], coords[1], coords[2]])
+        }
 
-def load_graph(filename):
-    yosys = json.load(open(filename))
+    io_constraints = []
+    
+    with open(filename, 'r') as file:
+        for line in file.readlines():
+            io_constraints.append(parse_constraint(line))
+
+    return io_constraints
+
+
+def load_graph(yosys_json, constraint_file):
+    yosys = json.load(open(yosys_json))
+
+    constraints = read_constraints(constraint_file)
 
     if len(yosys['modules']) > 1:
         print("_your design is not flattened. Run `flatten' in _yosys when synthesizing your design.")
@@ -97,6 +116,8 @@ def load_graph(filename):
     for (partial_cell) in graph:
         find_outputs(partial_cell, graph)
         find_inputs(partial_cell, graph)
+
+    add_io_to_graph(graph, constraints, top['ports'])
 
     return graph
 
@@ -130,3 +151,7 @@ def find_inputs(partial_cell, cells):
                     else:
                         input_cells[input_port] = [(cell, port_name)]
     partial_cell.set_inputs(input_cells)
+
+def add_io_to_graph(graph, constraints, port_json):
+    for (port_name, data) in port_json.items():
+        print(port_name, data)

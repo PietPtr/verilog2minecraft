@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Tuple, List, Dict
 import compiler.graph as graph
 import util.coord as tup
+import math
 
 
 class GateVersion:
@@ -48,6 +49,20 @@ minecraft_cell_lib = {
     ]
 }
 
+def generate_4_rotation_versions(gv : GateVersion) -> List[GateVersion]:
+    def rotate(v, angle):
+        return tup.to_np(rotate(tup.to_tup(v), angle))
+
+    versions = []
+    for angle in range(0, 360, 90):
+        # new_gv = GateVersion(
+        #         gv.name + "_" + str(angle),
+        #         rotate(gv.size, angle),
+        #         {p: rotate(p, )}
+                
+        #     )
+        pass
+
 def collides_with_any(position, size, placed_cells):
     for placed in placed_cells:
         if placed.collides(position, size):
@@ -75,7 +90,7 @@ def place_random(graph, seed):
         collision_tries = 0
         while collides:
             position = random_pos()
-            gv = minecraft_cell_lib[cell.celltype][0]
+            gv = random.choice(minecraft_cell_lib[cell.celltype])
 
             collides = collides_with_any(position, gv.size, placed_cells)
             if collides:
