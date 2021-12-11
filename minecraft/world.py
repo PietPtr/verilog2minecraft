@@ -41,7 +41,7 @@ class World:
                     pos = tupleAdd(position, (x, y, z))
                     block = minecraft.get_version_block(pos[0], pos[1], pos[2], "minecraft:overworld", mc_version)
                     if isinstance(block[0], Block) and block[0].base_name != 'air':
-                        blocks[pos] = block[0]
+                        blocks[(x, y, z)] = block[0]
         minecraft.close()
         return Model(blocks)
 
