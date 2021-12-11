@@ -9,8 +9,8 @@ class Cell:
         self.celltype = celltype
         self.input_ports = input_ports # [(string, net_id)]
         self.output_ports = output_ports
-        self.outputs = []
-        self.inputs = []
+        self.outputs = {}
+        self.inputs = {}
 
         self.position = None
         self.gate_version = None

@@ -8,7 +8,7 @@ load_dotenv()
 
 unplaced = graph.load_graph("test.json")
 placed = place.random_search(unplaced)
-routed = router.route(placed)
+redstone_tracks = router.route(placed)
 
 
 minecraft = World()
@@ -18,5 +18,8 @@ for cell in placed:
     model = components.get_component(cell.celltype)
     position = [cell.position[0] - 70, cell.position[1], cell.position[2] - 135]
     minecraft.add_model(position, model)
+
+for block, position in redstone_tracks:
+    minecraft.set_block(position, block)
 
 minecraft.build(os.getenv("HOME") + "/.minecraft/saves/output")

@@ -73,8 +73,13 @@ class Router:
         return result
 
 
-def route(placed_cells):
+def route(placed_cells) -> List[Tuple[BlockType, Tuple[int, int, int]]]:
     router = Router()
     for cell in placed_cells:
-        for output in cell.outputs:
-            router.make_route(output, cell.outputs[output]) # todo: Staal fix het
+        for (from_port_name, to_cells) in cell.outputs.items():
+            for (to_cell, to_port_name) in to_cells:
+                start = cell.position + cell.gate_version.output_positions[from_port_name]
+                end = to_cell.position + to_cell.gate_version.input_positions[to_port_name]
+                router.make_route(to_cell, start, end)
+
+    return router.get_all_blocks()
