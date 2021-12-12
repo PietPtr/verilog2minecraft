@@ -23,6 +23,6 @@ Run the tool with one of the JSON files in the jsons folder, or build the JSONs 
 
 [ ] Add simulated annealing placer
 
-[ ] Allow users to constrain outputs to physical I/O with a location
+[x] Allow users to constrain outputs to physical I/O with a location
 
 [ ] Rotations

@@ -164,7 +164,8 @@ def find_inputs(partial_cell, cells):
 def add_outputs_to_graph(graph, constraints, port_json):
     for (port_name, data) in port_json.items():
         if data['direction'] == 'output':
-            net_id = data['bits'][0] # Assume 1-bit I/O
+            net_id = data['bits'][0] # Assume 1-bit I/O 
+            # TODO: breedere I/O toevoegen
 
             o_cell = Cell(port_name + '_output', 'OUTPUT', [('DRIVEN', net_id)], [])
             o_cell.place(constraints[port_name], cell_defs.minecraft_cell_lib['OUTPUT'][0])

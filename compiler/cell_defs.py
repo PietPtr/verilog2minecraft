@@ -6,6 +6,8 @@ import util.coord as tup
 from pprint import pprint
 
 class GateVersion:
+    input_positions: Dict[str, Tuple[int, int, int]]
+
     def __init__(self, celltype, size, input_positions, output_positions, implementation_file):
         self.celltype = celltype
         self.size = size
@@ -18,6 +20,7 @@ class GateVersion:
 
 def build(models : Dict[str, minecraft.world.Model], cell_json) -> Dict[str, List[GateVersion]]:
     global minecraft_cell_lib
+    DO_ROTATE_FOR = ["$_NOT_"]
 
     for (model_name, model) in models.items():
         if not (model_name in ["$_NOT_", "$_OR_", "$_DFFE_PP0N_", "INPUT", "OUTPUT"]):
@@ -44,8 +47,24 @@ def build(models : Dict[str, minecraft.world.Model], cell_json) -> Dict[str, Lis
 
         if not (model.yosys_name in minecraft_cell_lib):
             minecraft_cell_lib[model.yosys_name] = []
-        
-        minecraft_cell_lib[model.yosys_name].append(gv)
+
+        def rotate(v, angle):
+            return tup.to_np(tup.rotate(tup.to_tup(v), angle))
+
+        if model_name in DO_ROTATE_FOR:
+            print(f"creating rotation gv's for {model_name}")
+            for angle in range(0, 360, 90):
+                new_gv = GateVersion(
+                    gv.celltype + "_" + str(angle),
+                    rotate(gv.size, angle),
+                    {p: rotate(input_positions[p], angle) for p in input_positions},
+                    {p: rotate(output_positions[p], angle) for p in output_positions},
+                    gv.implementation_file + "_" + str(angle)
+                )
+                minecraft_cell_lib[model.yosys_name].append(new_gv)
+        else:
+            minecraft_cell_lib[model.yosys_name].append(gv)
+
 
 
 wool_map = {

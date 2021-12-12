@@ -11,14 +11,16 @@ components = ComponentManager()
 def rotated_versions(model_name):
     angles = [0, 90, 180, 270]
     for theta in angles:
-        cmp = components.get_model(model_name)
+        model = components.get_model(model_name)
         rotated_blocks = dict()
-        for (pos, block_id) in cmp.blocks.items():
-            rotated_blocks[tup.rotate(pos, theta)] = block_id
+        for (pos, block_id) in model.blocks.items():
+            new_pos = tup.tupleAdd(tup.rotate(pos, theta), (2, 2, 2))
+            rotated_blocks[new_pos] = block_id
+            print(pos, new_pos, block_id)
         
-        model = Model(rotated_blocks)
-        with open(f'minecraft/data/components/{model_name + "_" + str(theta)}', 'wb') as f:
-            pickle.dump(model, f)
+        model_new = Model(rotated_blocks, model.bounding_box, model.ports, model.size, model.yosys_name, model.name)
+        with open(f'minecraft/data/components/{model_new.name + "_" + str(theta)}', 'wb') as f:
+            pickle.dump(model_new, f)
 
 
 
