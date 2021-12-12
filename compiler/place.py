@@ -24,6 +24,7 @@ def generate_4_rotation_versions(gv : GateVersion) -> List[GateVersion]:
         #     )
         pass
 
+
 def collides_with_any(position, size, placed_cells):
     for placed in placed_cells:
         if placed.collides(position, size):
@@ -32,7 +33,7 @@ def collides_with_any(position, size, placed_cells):
 
 
 def place_random(graph, seed):
-    x_size = int(len(graph) * 5.0)
+    x_size = int(len(graph) * 0.2)
     y_size = x_size
 
     np.random.seed(seed)
@@ -82,7 +83,7 @@ def random_search(graph):
     total_tries = 0
 
     seed1 = random.randint(0, 2**32 - 1)
-    iterations = 100
+    iterations = 10
 
     for i in range(iterations):
         seed = (i * seed1) & 0xffffffff
@@ -97,7 +98,7 @@ def random_search(graph):
         if collision_tries > 50:
             print(f"High amount of collisions ({collision_tries}) in placer, provide more space.")
         
-        if i % 100 == 0:
+        if i % 2 == 0:
             print(f"Random placer iteration {i}...")
 
     print(f"Placed {iterations} iterations randomly:")
@@ -107,6 +108,7 @@ def random_search(graph):
     
     (result, tries) = place_random(graph, best_placed_seed)
     return result
+
 
 def placed_to_netmap(placed: List[graph.Cell]) -> Dict[Tuple[int, int, int], List[Tuple[int, int, int]]]:
     def arr_to_tuple(arr):

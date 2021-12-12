@@ -15,8 +15,8 @@ minecraft = World()
 components = ComponentManager()
 
 unplaced = graph.load_graph("jsons/test.json", "constraints.txt", components)
-# placed = place_and_route(unplaced)
-placed = place.random_search(unplaced)
+placed = place_and_route(unplaced)
+# placed = place.random_search(unplaced)
 netmap = place.placed_to_netmap(placed)
 
 offset = (0, 2, 0)
@@ -27,7 +27,7 @@ for cell in placed:
     model = components.get_model(cell.celltype)
     position = tupleAdd(cell.position, offset)
     minecraft.add_model(position, model)
-    minecraft.add_model_bounding(tupleAdd(position, (0, 20, 0)), model)
+    # minecraft.add_model_bounding(tupleAdd(position, (0, 20, 0)), model)
     static_bounding_box.update(tupleAdd(cell.position, pos) for pos in model.bounding_box)
 
 minecraft.build(os.getenv("HOME") + "/.minecraft/saves/output_before")
