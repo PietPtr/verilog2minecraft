@@ -13,7 +13,7 @@ from compiler.daanpnr import place_and_route
 
 
 def place_random(graph, seed):
-    x_size = int(len(graph) * 5.0)
+    x_size = int(len(graph) * 0.2)
     y_size = x_size
 
     np.random.seed(seed)
@@ -166,7 +166,7 @@ def place_sa(graph):
 
     best_score = float("inf")
     best_positions = [] # same order and size as graph, positions per cell...
-    
+
 
     def apply_neighbor_transform(graph, k, temp, seed0):
         nonlocal best_score
@@ -176,7 +176,7 @@ def place_sa(graph):
         old_score = manhattan_distance(graph)
         offsets = generate_offsets(seed)
         apply_offsets(graph, offsets)
-        
+
         new_score = manhattan_distance(graph)
 
         writer.writerow([k, (temp / T_0) * 100, (old_score / start_score) * 100])
@@ -233,5 +233,6 @@ def place_sa(graph):
 
     print(f"Final score: {manhattan_distance(graph)}")
     f.close()
+
 
     return graph

@@ -18,15 +18,18 @@ def place_and_route(unplaced):
             continue
         gv = minecraft_cell_lib[cell.celltype][0]
         if placer is None:
-            cell.place(np.array([0, 5, 0]), gv)
+            cell.place(np.array([20, 20, 20]), gv)
         else:
             new_position = np.array(placer.position)
             new_position[0] += placer.gate_version.size[0] + 1
             while collides_with_any(new_position, gv.size, placed_cells):
                 # print("position collides:", new_position)
                 new_position[0] += random.randint(-2, 2)
-                new_position[1] = max(5, new_position[1] + random.randint(-2, 2))
+                new_position[1] = min(200, max(5, new_position[1] + random.randint(-2, 2)))
                 new_position[2] += random.randint(-2, 2)
+
+                for i in range(3):
+                    new_position[i] = max(20, new_position[i])
             cell.place(new_position, gv)
 
         for inputs in cell.inputs.values():
@@ -44,5 +47,9 @@ def place_and_route(unplaced):
 
     print("Finished")
     return unplaced
+
+def spring_graph(graph):
+    springs = []
+
 
 
