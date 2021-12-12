@@ -30,6 +30,7 @@ class RouteNode(NamedTuple):
     point: Tuple[int, int, int]
     previous: Optional['RouteNode']
     length: int
+    last_straight: int
 
     def visited_points(self, steps=6) -> Set[Tuple[int, int, int]]:
         n = self
@@ -84,10 +85,10 @@ class Router:
         return abs(a[0]-b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])
 
     def _find_route(self, original_start: Tuple[int, int, int], start: Tuple[int, int, int], end: Tuple[int, int, int],
-                    maxQ: int, max_depth: int = None, max_counter: int = 100) -> RouteNode:
+                    maxQ: int, max_depth: int = None, max_counter: int = 100, is_revese: bool = False) -> RouteNode:
         Q = []
         self.iterations = 0
-        heapq.heappush(Q, (self._manhattan(start, end), 0, RouteNode(start, None, 0)))
+        heapq.heappush(Q, (self._manhattan(start, end), 0, RouteNode(start, None, 0, 0)))
         best = self._manhattan(start, end)
         visited = set()
         collision_output: Optional[List[Tuple[int, int, int]]] = None
@@ -119,9 +120,10 @@ class Router:
             previous_points = node.visited_points().union({end})
             random.shuffle(ALL_DIRECTIONS)
             directions = ALL_DIRECTIONS
-            # if node.length % 15 in [1, 2]:
-            #     newx, _, newz = tupleSub(node.point, node.previous.point)
-            #     directions = [(newx, 0, newz)]
+
+            if node.last_straight >= 15:
+                newx, _, newz = tupleSub(node.point, node.previous.point)
+                directions = [(newx, 0, newz)]
 
             for x, y, z in directions:
                 pos = tupleAdd((x, y, z), node.point)
@@ -153,7 +155,11 @@ class Router:
 
                 # if self._manhattan(pos, end) <= 2:
                 #     print(f'Adding {pos} with distance {self._manhattan(pos, end)}')
-                heapq.heappush(Q, (self._manhattan(pos, end), node.length + 1, RouteNode(pos, node, node.length + 1)))
+                last_straight = node.last_straight + 1
+                delta = tupleSub(pos, node.point)
+                if node.previous and tupleSub(node.point, node.previous.point) == delta and delta[1] == 0 and delta.count(0) == 2:
+                    last_straight = 1
+                heapq.heappush(Q, (self._manhattan(pos, end), node.length + 1, RouteNode(pos, node, node.length + 1, last_straight)))
 
         raise NoRouteFoundException(collision_output.copy() if collision_output else None, self._manhattan(start, end), best, could_not_expand,
                                     f'Could not find route between {start} and {end}. Closest: {best}, start: {self._manhattan(start, end)}')
@@ -189,7 +195,7 @@ class Router:
                     best_pos, best = pos, score
         print(f"Starting route from {best_pos}({start})->{end}")
         try:
-            tmp_node = self._find_route(end, end, best_pos, 150, max_depth=4, max_counter=10)
+            tmp_node = self._find_route(end, end, best_pos, 150, max_depth=4, max_counter=10, is_revese=True)
         except NoRouteFoundException as e:
             if e.start_dist - e.end_dist <= 4:
                 print('Finding reverse route failed! Throwing exception')
@@ -240,6 +246,7 @@ def create_routes(network: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]
     global router
     router = Router(network, component_bounding_box)
     todo = [start for start in network.keys()]
+    base = 1
     while len(todo) > 0:
         print(f'Todo size: {len(todo)}')
         start = todo.pop(0)
@@ -247,12 +254,13 @@ def create_routes(network: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]
         for end in network[start]:
             print(f'Routing {start} -> {end}')
             while True:
-                tries += 1
                 try:
-                    router.make_route(start, end, 100 * 2**tries)
+                    router.make_route(start, end, min(500 + 1000*tries, 7500))
                     break
                 except NoRouteFoundException as e:
                     print(e)
+                    tries += 1
+                    base += 1
                     if e.collision is None:
                         continue
                     for collision_start in e.collision:
