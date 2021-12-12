@@ -1,3 +1,4 @@
+import random
 import time
 from itertools import product
 from typing import List, Tuple, Set, Dict, Any, NamedTuple, Optional
@@ -95,7 +96,7 @@ class Router:
         start_distance = self._manhattan(start, end)
         could_not_expand = set()
         counter = 0
-        while 0 < len(Q) < maxQ and counter <= 750:
+        while 0 < len(Q) < maxQ and counter <= 500 and self.iterations <= 5000:
             self.iterations += 1
             heuristic, unused, node = heapq.heappop(Q)
             if node.point == end:
@@ -110,13 +111,13 @@ class Router:
                 best = current_dist
                 counter = 0
 
-            if last_distance < current_dist:
+            if last_distance <= current_dist:
                 counter += 1
 
             last_distance = current_dist
 
             previous_points = node.visited_points().union({end})
-
+            random.shuffle(ALL_DIRECTIONS)
             for x, y, z in ALL_DIRECTIONS:
                 pos = tupleAdd((x, y, z), node.point)
                 positions_to_check = {pos, tupleAdd(pos, (0, 1, 0)), tupleAdd(pos, (0, -1, 0))}
@@ -228,9 +229,10 @@ class Router:
         result.extend((WoolType.RED_WOOL, b) for b in could_not_expand)
         return result
 
-
+router = None
 def create_routes(network: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]],
                   component_bounding_box: Set[Tuple[int, int, int]]) -> List[Tuple[BlockType, Tuple[int, int, int]]]:
+    global router
     router = Router(network, component_bounding_box)
     todo = [start for start in network.keys()]
     while len(todo) > 0:
@@ -250,5 +252,6 @@ def create_routes(network: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]
                         print(f"Removing routes from point: {collision_start}")
                         router.remove_route(collision_start)
                         todo.append(collision_start)
+                        random.shuffle(todo)
 
     return router.get_all_blocks()

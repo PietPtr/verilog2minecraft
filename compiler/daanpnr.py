@@ -46,6 +46,7 @@ def place_and_route(unplaced):
         print("placed: ", cell, "total: ", len(placed_cells), "out of", len(unplaced))
 
     print("Finished")
+    print(unplaced)
     return unplaced
 
 def spring_graph(graph):
