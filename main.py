@@ -16,8 +16,8 @@ components = ComponentManager()
 
 unplaced = graph.load_graph("jsons/test.json", "constraints.txt", components)
 # placed = place_and_route(unplaced)
-placed = place.random_search(unplaced)
-# placed = place.place_sa(unplaced)
+# placed = place.random_search(unplaced, iterations=10000)
+placed = place.place_sa(unplaced)
 netmap = place.placed_to_netmap(placed)
 
 offset = (0, 2, 0)

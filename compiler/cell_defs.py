@@ -52,6 +52,7 @@ def build(models : Dict[str, minecraft.world.Model], cell_json) -> Dict[str, Lis
             return tup.to_np(tup.rotate(tup.to_tup(v), angle))
 
         if model_name in DO_ROTATE_FOR:
+            minecraft_cell_lib[model.yosys_name].append(gv)
             print(f"creating rotation gv's for {model_name}")
             for angle in range(0, 360, 90):
                 new_gv = GateVersion(

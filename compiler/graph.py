@@ -75,6 +75,26 @@ class Cell:
         else:
             return f"Placed Cell ({self.celltype} at {self.position[0]},{self.position[1]},{self.position[2]} impl {self.gate_version.implementation_file})"
 
+
+def collides_with_any(position, size, placed_cells):
+    for placed in placed_cells:
+        if placed.collides(position, size):
+            return True
+    return False
+
+def collides_with_any_except(position, size, placed_cells, index):
+    i = -1
+    for placed in placed_cells:
+        i += 1
+        if i == index:
+            continue
+        if placed.collides(position, size):
+            return True
+    return False
+
+
+
+
 def read_constraints(filename):
     def parse_constraint(line):
         port_name = line.split(":")[0]

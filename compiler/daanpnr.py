@@ -2,12 +2,12 @@ import random
 
 import numpy as np
 
-from compiler.place import minecraft_cell_lib, collides_with_any
-
+from compiler.cell_defs import minecraft_cell_lib
+from compiler.graph import collides_with_any
 
 def place_and_route(unplaced):
 
-    to_place = [(None, unplaced[0])]
+    to_place = [(None, unplaced[1])]
     placed_cells = [x for x in unplaced if x.placed]
     print(placed_cells)
 

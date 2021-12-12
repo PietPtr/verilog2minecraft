@@ -3,19 +3,13 @@ import random
 from pprint import pprint
 from enum import Enum
 from typing import Tuple, List, Dict
-import compiler.graph as graph
+from compiler.graph import collides_with_any, collides_with_any_except, Cell
 import util.coord as tup
 import math
 from compiler.cell_defs import *
+import csv
+from compiler.daanpnr import place_and_route
 
-
-
-
-def collides_with_any(position, size, placed_cells):
-    for placed in placed_cells:
-        if placed.collides(position, size):
-            return True
-    return False
 
 
 def place_random(graph, seed):
@@ -97,7 +91,7 @@ def random_search(graph, iterations=100):
     (result, tries) = place_random(graph, best_placed_seed)
     return result
 
-def placed_to_netmap(placed: List[graph.Cell]) -> Dict[Tuple[int, int, int], List[Tuple[int, int, int]]]:
+def placed_to_netmap(placed: List[Cell]) -> Dict[Tuple[int, int, int], List[Tuple[int, int, int]]]:
     def arr_to_tuple(arr):
         return (arr[0], arr[1], arr[2])
 
@@ -115,7 +109,7 @@ def placed_to_netmap(placed: List[graph.Cell]) -> Dict[Tuple[int, int, int], Lis
     return netmap
 
 
-def placed_cell_bb(placed: List[graph.Cell]):
+def placed_cell_bb(placed: List[Cell]):
     bounding_box = set()
     for cell in placed:
         tl = cell.position
@@ -130,12 +124,15 @@ def placed_cell_bb(placed: List[graph.Cell]):
     
     return bounding_box
 
-
+# jahaaa dit moet eigenlijk een class zijn 
 def place_sa(graph):
+    T_0 = 100
+    k_max = 1000
+    a = 0.0001
+    OFFSET_RANGE = np.array([5, 5, 5])
     def temperature(k):
-        T_0 = 100
-        a = 0.2
-        return T_0 / (1 + a * k)
+        nonlocal a
+        return T_0 / (1 + a * k*k)
 
     def apply_offsets(graph, offsets):
         i = 0
@@ -144,19 +141,17 @@ def place_sa(graph):
             position = cell.position + offset
             size = minecraft_cell_lib[cell.celltype][0].size
 
-            # TODO: dit werkt niet want position zit al in de graph sukkol
-            collides = collides_with_any(position, size, graph)
+            collides = collides_with_any_except(position, size, graph, i)
             
             if not collides:
                 cell.place(position, minecraft_cell_lib[cell.celltype][0])
-                print("wat")
 
 
             i += 1
 
     def generate_offsets(seed):
+        nonlocal OFFSET_RANGE
         np.random.seed(seed)
-        OFFSET_RANGE = np.array([5, 5, 5])
         offsets = [((np.random.rand(3) - 0.5) * OFFSET_RANGE).astype(int)
             for _ in range(len(graph))
         ]
@@ -166,7 +161,7 @@ def place_sa(graph):
         nonlocal best_positions
         best_positions = []
         for cell in graph:
-            best_positions.append(cell.position)
+            best_positions.append((cell.position[0], cell.position[1], cell.position[2]))
 
 
     best_score = float("inf")
@@ -175,6 +170,7 @@ def place_sa(graph):
 
     def apply_neighbor_transform(graph, k, temp, seed0):
         nonlocal best_score
+        nonlocal writer
         seed = k * seed0 & 0xffffffff
 
         old_score = manhattan_distance(graph)
@@ -183,48 +179,59 @@ def place_sa(graph):
         
         new_score = manhattan_distance(graph)
 
+        writer.writerow([k, (temp / T_0) * 100, (old_score / start_score) * 100])
+
         if new_score > old_score: # if new is _worse_ than old, accept it by chance.
             delta = new_score - old_score
             r = random.random()
             value = - delta / (k * temp)
-            print(value)
-            if (r < math.exp(value)):
-                pass
+            p_accept = 1 - math.exp(value)
+            # print(f"P_accept new anyway: {p_accept}, given delta = {delta}")
+            if (r < p_accept):
+                # print(f"Kept s' by chance. {r} {p_accept}")
+                pass # keep new graph
             else:
                 apply_offsets(graph, list(map(lambda x: -x, offsets)))
-        else:
-            # keep old graph
-            apply_offsets(graph, list(map(lambda x: -x, offsets)))
+        else: # if new is _better_ than old, always accept it.
+            pass
+
 
         score = min(new_score, old_score)
         if score < best_score:
             best_score = score
             save_positions(graph)
 
-            print(f"New best score found: {best_score}")
+    f = open('sa_log.csv', 'w')
+    writer = csv.writer(f)
+    writer.writerow(["k", "temp", "old_score"])
 
-        
+    seed = random.randint(0,987432987432)
 
     # generate 100 random placements and take the best
-    initial = random_search(graph, 100)
+    # initial = random_search(graph, iterations=100)
+    initial = place_and_route(graph)
+
+    start_score = manhattan_distance(initial)
+    print(f"Starting with start score: {start_score}")
 
     
-    k_max = 100
-    seed = random.randint(0,987432987432)
-    for k in range(0, k_max + 1):
+    for k in range(1, k_max + 1):
         temp = temperature(k)
 
         apply_neighbor_transform(initial, k, temp, seed)
 
-        if k % 10 == 0:
-            print(f"{k}: temp = {round(temp*100)/100}")
-        
+        if k % (k_max // 10) == 0 or k == 1:
+            print(f"{k}: temp = {round(temp*100)/100}, best = {best_score}")
+
     i = 0
     for pos in best_positions:
-        graph[i].position = pos
+        graph[i].place(
+            np.array([pos[0], pos[1], pos[2]]), 
+            minecraft_cell_lib[graph[i].celltype][0])
         i += 1
 
-    print(manhattan_distance(graph))
-        
+
+    print(f"Final score: {manhattan_distance(graph)}")
+    f.close()
 
     return graph
