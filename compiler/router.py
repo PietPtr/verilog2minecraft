@@ -84,7 +84,7 @@ class Router:
         return abs(a[0]-b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])
 
     def _find_route(self, original_start: Tuple[int, int, int], start: Tuple[int, int, int], end: Tuple[int, int, int],
-                    maxQ: int, max_depth: int = None) -> RouteNode:
+                    maxQ: int, max_depth: int = None, max_counter: int = 100) -> RouteNode:
         Q = []
         self.iterations = 0
         heapq.heappush(Q, (self._manhattan(start, end), 0, RouteNode(start, None, 0)))
@@ -96,7 +96,7 @@ class Router:
         start_distance = self._manhattan(start, end)
         could_not_expand = set()
         counter = 0
-        while 0 < len(Q) < maxQ and counter <= 5000 and self.iterations <= 5000:
+        while 0 < len(Q) < maxQ and counter <= max_counter:
             self.iterations += 1
             heuristic, unused, node = heapq.heappop(Q)
             if node.point == end:
@@ -119,10 +119,9 @@ class Router:
             previous_points = node.visited_points().union({end})
             random.shuffle(ALL_DIRECTIONS)
             directions = ALL_DIRECTIONS
-            if node.length % 15 in [1, 2]:
-                newx, _, newz = tupleSub(node.point, node.previous.point)
-                directions = [(newx, 0, newz)]
-
+            # if node.length % 15 in [1, 2]:
+            #     newx, _, newz = tupleSub(node.point, node.previous.point)
+            #     directions = [(newx, 0, newz)]
 
             for x, y, z in directions:
                 pos = tupleAdd((x, y, z), node.point)
@@ -179,7 +178,7 @@ class Router:
         del self.all_routes[route_start]
         self.recompute_bounding_box()
 
-    def make_route(self, start: Tuple[int, int, int], end: Tuple[int, int, int]):
+    def make_route(self, start: Tuple[int, int, int], end: Tuple[int, int, int], max_counter: int):
         best_pos, best = start, self._manhattan(start, end)
         if start in self.all_routes:
             for block, pos in self.all_routes[start]:
@@ -190,13 +189,13 @@ class Router:
                     best_pos, best = pos, score
         print(f"Starting route from {best_pos}({start})->{end}")
         try:
-            tmp_node = self._find_route(end, end, best_pos, 150, max_depth=4)
+            tmp_node = self._find_route(end, end, best_pos, 150, max_depth=4, max_counter=10)
         except NoRouteFoundException as e:
             if e.start_dist - e.end_dist <= 4:
                 print('Finding reverse route failed! Throwing exception')
                 raise e
 
-        node = self._find_route(start, best_pos, end, 100000)
+        node = self._find_route(start, best_pos, end, 100000, max_counter=max_counter)
 
         print(f"found route from {best_pos}({start})->{end} in {self.iterations} iterations")
         result = []
@@ -244,16 +243,18 @@ def create_routes(network: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]
     while len(todo) > 0:
         print(f'Todo size: {len(todo)}')
         start = todo.pop(0)
+        tries = 0
         for end in network[start]:
             print(f'Routing {start} -> {end}')
             while True:
+                tries += 1
                 try:
-                    router.make_route(start, end)
+                    router.make_route(start, end, 100 * 2**tries)
                     break
                 except NoRouteFoundException as e:
                     print(e)
                     if e.collision is None:
-                        return router.get_bounding_blocks(e.could_not_expand)
+                        continue
                     for collision_start in e.collision:
                         print(f"Removing routes from point: {collision_start}")
                         router.remove_route(collision_start)
