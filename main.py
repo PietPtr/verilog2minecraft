@@ -16,7 +16,7 @@ load_dotenv()
 minecraft = World()
 components = ComponentManager()
 
-unplaced = graph.load_graph("jsons/modulo.json", "constraints.txt", components)
+unplaced = graph.load_graph("jsons/combi.json", "constraints.txt", components)
 placed = place_and_route(unplaced)
 # placed = place.random_search(unplaced, iterations=10000)
 # placed = place.place_sa(unplaced)

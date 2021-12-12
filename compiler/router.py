@@ -7,7 +7,7 @@ from enum import Enum
 from amulet import Block
 
 from compiler.graph import Cell
-from util.coord import tupleAdd
+from util.coord import tupleAdd, tupleSub
 import heapq
 
 from util.wool import WoolType
@@ -96,7 +96,7 @@ class Router:
         start_distance = self._manhattan(start, end)
         could_not_expand = set()
         counter = 0
-        while 0 < len(Q) < maxQ and counter <= 500 and self.iterations <= 5000:
+        while 0 < len(Q) < maxQ and counter <= 5000 and self.iterations <= 5000:
             self.iterations += 1
             heuristic, unused, node = heapq.heappop(Q)
             if node.point == end:
@@ -118,7 +118,13 @@ class Router:
 
             previous_points = node.visited_points().union({end})
             random.shuffle(ALL_DIRECTIONS)
-            for x, y, z in ALL_DIRECTIONS:
+            directions = ALL_DIRECTIONS
+            if node.length % 15 in [1, 2]:
+                newx, _, newz = tupleSub(node.point, node.previous.point)
+                directions = [(newx, 0, newz)]
+
+
+            for x, y, z in directions:
                 pos = tupleAdd((x, y, z), node.point)
                 positions_to_check = {pos, tupleAdd(pos, (0, 1, 0)), tupleAdd(pos, (0, -1, 0))}
                 own_bounding = set([tupleAdd(pos, offset) for offset in BOUNDING_DIRECTIONS])
