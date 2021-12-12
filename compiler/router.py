@@ -95,7 +95,7 @@ class Router:
         start_distance = self._manhattan(start, end)
         could_not_expand = set()
         counter = 0
-        while 0 < len(Q) < maxQ and counter <= 5000:
+        while 0 < len(Q) < maxQ and counter <= 750:
             self.iterations += 1
             heuristic, unused, node = heapq.heappop(Q)
             if node.point == end:
@@ -108,6 +108,7 @@ class Router:
 
             if current_dist < best:
                 best = current_dist
+                counter = 0
 
             if last_distance < current_dist:
                 counter += 1
@@ -146,7 +147,7 @@ class Router:
 
                 # if self._manhattan(pos, end) <= 2:
                 #     print(f'Adding {pos} with distance {self._manhattan(pos, end)}')
-                heapq.heappush(Q, (self._manhattan(pos, end) + node.length + 1, self._manhattan(pos, end), RouteNode(pos, node, node.length + 1)))
+                heapq.heappush(Q, (self._manhattan(pos, end), node.length + 1, RouteNode(pos, node, node.length + 1)))
 
         raise NoRouteFoundException(collision_output.copy() if collision_output else None, self._manhattan(start, end), best, could_not_expand,
                                     f'Could not find route between {start} and {end}. Closest: {best}, start: {self._manhattan(start, end)}')
@@ -233,6 +234,7 @@ def create_routes(network: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]
     router = Router(network, component_bounding_box)
     todo = [start for start in network.keys()]
     while len(todo) > 0:
+        print(f'Todo size: {len(todo)}')
         start = todo.pop(0)
         for end in network[start]:
             print(f'Routing {start} -> {end}')

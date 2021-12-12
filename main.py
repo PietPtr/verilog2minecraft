@@ -14,7 +14,7 @@ load_dotenv()
 minecraft = World()
 components = ComponentManager()
 
-unplaced = graph.load_graph("jsons/test.json", "constraints.txt", components)
+unplaced = graph.load_graph("jsons/modulo.json", "constraints.txt", components)
 placed = place_and_route(unplaced)
 # placed = place.random_search(unplaced)
 netmap = place.placed_to_netmap(placed)

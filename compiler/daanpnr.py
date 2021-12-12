@@ -25,7 +25,7 @@ def place_and_route(unplaced):
             while collides_with_any(new_position, gv.size, placed_cells):
                 # print("position collides:", new_position)
                 new_position[0] += random.randint(-2, 2)
-                new_position[1] = max(5, new_position[1] + random.randint(-2, 2))
+                new_position[1] = min(200, max(5, new_position[1] + random.randint(-2, 2)))
                 new_position[2] += random.randint(-2, 2)
 
                 for i in range(3):
@@ -47,7 +47,6 @@ def place_and_route(unplaced):
 
     print("Finished")
     return unplaced
-
 
 def spring_graph(graph):
     springs = []
