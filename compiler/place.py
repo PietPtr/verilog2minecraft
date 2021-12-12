@@ -55,7 +55,7 @@ def manhattan_distance(graph):
 
     for (start, ends) in netmap.items():
         for end in ends:
-            sum += tup.dist(start, end)
+            sum += tup.dist(start, end) ** 2
 
     return sum
 
@@ -128,11 +128,25 @@ def placed_cell_bb(placed: List[Cell]):
 def place_sa(graph):
     T_0 = 100
     k_max = 1000
-    a = 0.0001
+    a = 0.00005
     OFFSET_RANGE = np.array([5, 5, 5])
     def temperature(k):
         nonlocal a
         return T_0 / (1 + a * k*k)
+
+    def random_other_cell(gv, graph):
+        r = random.randint(0, len(graph))
+        i = 0
+
+        while r >= 0:
+            cell = graph[i % len(graph)]
+            if cell.gate_version.implementation_file == gv.implementation_file:
+                r -= 1
+                if r <= 0:
+                    return cell
+            i += 1
+        raise Exception("Should not have reached this point haha")
+
 
     def apply_offsets(graph, offsets):
         i = 0
@@ -145,7 +159,14 @@ def place_sa(graph):
             
             if not collides:
                 cell.place(position, minecraft_cell_lib[cell.celltype][0])
-
+            else:
+                if not cell.is_io:
+                    pass
+                    # This is the logic to perform a cell swap for two equal implemenation cells
+                    # other_cell = random_other_cell(cell.gate_version, graph)
+                    # (other_cell.position, cell.position) = (cell.position, other_cell.position)
+                    
+                    
 
             i += 1
 
@@ -234,5 +255,6 @@ def place_sa(graph):
     print(f"Final score: {manhattan_distance(graph)}")
     f.close()
 
+    exit()
 
     return graph

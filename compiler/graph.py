@@ -5,11 +5,12 @@ import compiler.cell_defs as cell_defs
 import numpy as np
 
 class Cell:
-    def __init__(self, name, celltype, input_ports, output_ports):
+    def __init__(self, name, celltype, input_ports, output_ports, is_io=False):
         self.name = name
         self.celltype = celltype
         self.input_ports = input_ports # [(string, net_id)]
         self.output_ports = output_ports
+        self.is_io = is_io
         self.outputs = {}
         self.inputs = {}
 
@@ -187,7 +188,7 @@ def add_outputs_to_graph(graph, constraints, port_json):
             net_id = data['bits'][0] # Assume 1-bit I/O 
             # TODO: breedere I/O toevoegen
 
-            o_cell = Cell(port_name + '_output', 'OUTPUT', [('DRIVEN', net_id)], [])
+            o_cell = Cell(port_name + '_output', 'OUTPUT', [('DRIVEN', net_id)], [], is_io=True)
             o_cell.place(constraints[port_name], cell_defs.minecraft_cell_lib['OUTPUT'][0])
             o_cell.freeze()
             graph.append(o_cell)
@@ -203,7 +204,7 @@ def add_inputs_to_graph(graph, constraints, port_json):
             # i_cell.place(constraints[port_name], cell_defs.minecraft_cell_lib['$_NOT_'][0])
 
 
-            i_cell = Cell(port_name + '_input', 'INPUT', [], [('DRIVES', net_id)])
+            i_cell = Cell(port_name + '_input', 'INPUT', [], [('DRIVES', net_id)], is_io=True)
             i_cell.place(constraints[port_name], cell_defs.minecraft_cell_lib['INPUT'][0])
             i_cell.freeze()
             find_outputs(i_cell, graph)
