@@ -14,6 +14,7 @@ class ComponentManager:
         for fname in os.listdir('minecraft/data/components'):
             with open(f'minecraft/data/components/{fname}', 'rb') as f:
                 self.models[fname] = pickle.load(f)
+                print(self.models[fname].blocks)
 
     def get_model(self, name: str) -> Model:
         return self.models[name]

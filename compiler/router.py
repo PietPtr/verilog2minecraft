@@ -5,6 +5,7 @@ from typing import List, Tuple, Set, Dict, Any, NamedTuple, Optional
 from enum import Enum
 
 from amulet import Block
+from amulet_nbt import TAG_String
 
 from compiler.graph import Cell
 from util.coord import tupleAdd, tupleSub
@@ -25,6 +26,37 @@ class BlockType(Enum):
 
     def to_minecraft(self) -> Block:
         return Block('minecraft', self.value)
+
+
+class RoutingBlock:
+    block_type: BlockType
+    properties: Dict[str, TAG_String]
+
+    def __init__(self, block_type: BlockType, direction: Tuple[Tuple[int, int, int], Tuple[int, int, int]] = None):
+        self.block_type = block_type
+        self.properties = dict()
+        if direction:
+            self.set_orientation(direction[0], direction[1])
+
+    def to_minecraft(self) -> Block:
+        return Block('minecraft', self.block_type.value, properties=self.properties)
+
+    def set_orientation(self, prev: Tuple[int, int, int], this: Tuple[int, int, int]):
+        delta = tupleSub(this, prev)
+        if delta == (0, 0, 1):
+            self.properties['facing'] = TAG_String('north')
+        elif delta == (0, 0, -1):
+            self.properties['facing'] = TAG_String('south')
+        elif delta == (1, 0, 0):
+            self.properties['facing'] = TAG_String('west')
+        elif delta == (-1, 0, 0):
+            self.properties['facing'] = TAG_String('east')
+
+    def __str__(self):
+        return f'RoutingBlock({self.block_type.value})'
+
+    def __repr__(self):
+        return str(self)
 
 class RouteNode(NamedTuple):
     point: Tuple[int, int, int]
@@ -62,7 +94,7 @@ class Router:
     bounding_box: Set[Tuple[int, int, int]]
     bounding_box_static: Set[Tuple[int, int, int]]
     bounding_box_route: Dict[Tuple[int, int, int], Set[Tuple[int, int, int]]]
-    all_routes: Dict[Tuple[int, int, int], List[Tuple[BlockType, Tuple[int, int, int]]]]
+    all_routes: Dict[Tuple[int, int, int], List[Tuple[RoutingBlock, Tuple[int, int, int]]]]
     blocks_to_route_starts: Dict[Tuple[int, int, int], Set[Tuple[int, int, int]]]
     network: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]]
     iterations: int
@@ -88,7 +120,8 @@ class Router:
                     maxQ: int, max_depth: int = None, max_counter: int = 100, is_revese: bool = False) -> RouteNode:
         Q = []
         self.iterations = 0
-        heapq.heappush(Q, (self._manhattan(start, end), 0, RouteNode(start, None, 0, 0)))
+        last_repeater = 7 if start == original_start else 15
+        heapq.heappush(Q, (self._manhattan(start, end), 0, RouteNode(start, None, 0, last_repeater)))
         best = self._manhattan(start, end)
         visited = set()
         collision_output: Optional[List[Tuple[int, int, int]]] = None
@@ -173,7 +206,7 @@ class Router:
     def remove_route(self, route_start: Tuple[int, int, int]):
         routes = self.all_routes[route_start]
         for block, pos in routes:
-            if block == BlockType.REDSTONE:
+            if block.block_type in (BlockType.REDSTONE, BlockType.REPEATER):
                 for offset in BOUNDING_DIRECTIONS:
                     bounding_pos = tupleAdd(pos, offset)
                     try:
@@ -186,16 +219,19 @@ class Router:
 
     def make_route(self, start: Tuple[int, int, int], end: Tuple[int, int, int], max_counter: int):
         best_pos, best = start, self._manhattan(start, end)
+        last_pos = start
         if start in self.all_routes:
             for block, pos in self.all_routes[start]:
-                if block != BlockType.REDSTONE:
+                if block != BlockType.REDSTONE or tupleSub(pos, last_pos)[1] != 0:
+                    last_pos = pos
                     continue
+                last_pos = pos
                 score = self._manhattan(pos, end)
                 if score < best:
                     best_pos, best = pos, score
         print(f"Starting route from {best_pos}({start})->{end}")
         try:
-            tmp_node = self._find_route(end, end, best_pos, 150, max_depth=4, max_counter=10, is_revese=True)
+            tmp_node = self._find_route(end, end, best_pos, 150, max_depth=4, max_counter=25, is_revese=True)
         except NoRouteFoundException as e:
             if e.start_dist - e.end_dist <= 4:
                 print('Finding reverse route failed! Throwing exception')
@@ -208,10 +244,25 @@ class Router:
         if start not in self.bounding_box_route:
             self.bounding_box_route[start] = set()
 
+        last_possible: Tuple[int, Tuple[int, int, int]] = None
+        last_repeated: int = 5
+        ordered_nodes: List[RouteNode] = []
         while node is not None:
+            ordered_nodes.append(node)
+            node = node.previous
+        ordered_nodes = list(reversed(ordered_nodes))
+
+        for idx, node in enumerate(ordered_nodes):
             wool_idx = sum(start)
-            result.append((WoolType.num_to_wool(wool_idx), (node.point[0], node.point[1] - 1, node.point[2])))
-            result.append((BlockType.REDSTONE, (node.point[0], node.point[1], node.point[2])))
+            if idx+1 < len(ordered_nodes) and ordered_nodes[idx+1].last_straight == 1:
+                last_possible = (len(result) + 1, node.point)
+            result.append((RoutingBlock(WoolType.num_to_wool(wool_idx)), (node.point[0], node.point[1] - 1, node.point[2])))
+            result.append((RoutingBlock(BlockType.REDSTONE), (node.point[0], node.point[1], node.point[2])))
+            if last_repeated >= 15:
+                prev = result[last_possible[0]-2][1]
+                result[last_possible[0]] = (RoutingBlock(BlockType.REPEATER, (prev, last_possible[1])), last_possible[1])
+                last_repeated = (len(result) - last_possible[0])//2 - 1
+            last_repeated += 1
             for x, y, z in BOUNDING_DIRECTIONS:
                 pos = tupleAdd((x, y, z), node.point)
                 self.bounding_box.add(pos)
@@ -219,30 +270,22 @@ class Router:
                 if pos not in self.blocks_to_route_starts:
                     self.blocks_to_route_starts[pos] = set()
                 self.blocks_to_route_starts[pos].add(start)
-            node = node.previous
+
         if start not in self.all_routes:
             self.all_routes[start] = []
 
         self.all_routes[start].extend(result)
 
-    def get_all_blocks(self) -> List[Tuple[BlockType, Tuple[int, int, int]]]:
+    def get_all_blocks(self) -> List[Tuple[RoutingBlock, Tuple[int, int, int]]]:
         result = []
         for route in self.all_routes.values():
             result.extend(route)
         return result
 
-    def get_bounding_blocks(self, could_not_expand: Set[Tuple[int, int, int]]) -> List[Tuple[BlockType, Tuple[int, int, int]]]:
-        result = self.get_all_blocks()
-        for static_block in self.bounding_box_static:
-            result.append((BlockType.GLASS, static_block))
-        for route, box in self.bounding_box_route.items():
-            result.extend([(WoolType.num_to_wool(sum(route)), pos) for pos in box])
-        result.extend((WoolType.RED_WOOL, b) for b in could_not_expand)
-        return result
 
 router = None
 def create_routes(network: Dict[Tuple[int, int, int], List[Tuple[int, int, int]]],
-                  component_bounding_box: Set[Tuple[int, int, int]]) -> List[Tuple[BlockType, Tuple[int, int, int]]]:
+                  component_bounding_box: Set[Tuple[int, int, int]]) -> List[Tuple[RoutingBlock, Tuple[int, int, int]]]:
     global router
     router = Router(network, component_bounding_box)
     todo = [start for start in network.keys()]

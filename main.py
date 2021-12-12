@@ -16,7 +16,7 @@ load_dotenv()
 minecraft = World()
 components = ComponentManager()
 
-unplaced = graph.load_graph("jsons/combi.json", "constraints.txt", components)
+unplaced = graph.load_graph("jsons/test.json", "constraints.txt", components)
 placed = place_and_route(unplaced)
 # placed = place.random_search(unplaced, iterations=10000)
 # placed = place.place_sa(unplaced)
@@ -52,7 +52,7 @@ signal.signal(signal.SIGINT, signal_handler)
 redstone_tracks = router.create_routes(netmap, static_bounding_box)
 
 for block, position in redstone_tracks:
-    # print(f"put {block} at {position}")
+    # print(f"put {block.to_minecraft()} at {position}")
     minecraft.set_block(tupleAdd(position, offset), block.to_minecraft())
 
 minecraft.build(os.getenv("HOME") + "/.minecraft/saves/output")
