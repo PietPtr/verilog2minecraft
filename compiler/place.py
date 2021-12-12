@@ -65,14 +65,13 @@ def manhattan_distance(graph):
 
     return sum
 
-def random_search(graph):
+def random_search(graph, iterations=100):
     best_distance = float("inf")
     best_placed_seed = 0
     total_dist = 0
     total_tries = 0
 
     seed1 = random.randint(0, 2**32 - 1)
-    iterations = 100
 
     for i in range(iterations):
         seed = (i * seed1) & 0xffffffff
@@ -135,15 +134,97 @@ def placed_cell_bb(placed: List[graph.Cell]):
 def place_sa(graph):
     def temperature(k):
         T_0 = 100
-        a = 0.95
-        return T_0 * (a ** k)
+        a = 0.2
+        return T_0 / (1 + a * k)
+
+    def apply_offsets(graph, offsets):
+        i = 0
+        for cell in graph:
+            offset = offsets[i]
+            position = cell.position + offset
+            size = minecraft_cell_lib[cell.celltype][0].size
+
+            # TODO: dit werkt niet want position zit al in de graph sukkol
+            collides = collides_with_any(position, size, graph)
+            
+            if not collides:
+                cell.place(position, minecraft_cell_lib[cell.celltype][0])
+                print("wat")
+
+
+            i += 1
+
+    def generate_offsets(seed):
+        np.random.seed(seed)
+        OFFSET_RANGE = np.array([5, 5, 5])
+        offsets = [((np.random.rand(3) - 0.5) * OFFSET_RANGE).astype(int)
+            for _ in range(len(graph))
+        ]
+        return offsets
+
+    def save_positions(graph):
+        nonlocal best_positions
+        best_positions = []
+        for cell in graph:
+            best_positions.append(cell.position)
+
+
+    best_score = float("inf")
+    best_positions = [] # same order and size as graph, positions per cell...
+    
+
+    def apply_neighbor_transform(graph, k, temp, seed0):
+        nonlocal best_score
+        seed = k * seed0 & 0xffffffff
+
+        old_score = manhattan_distance(graph)
+        offsets = generate_offsets(seed)
+        apply_offsets(graph, offsets)
+        
+        new_score = manhattan_distance(graph)
+
+        if new_score > old_score: # if new is _worse_ than old, accept it by chance.
+            delta = new_score - old_score
+            r = random.random()
+            value = - delta / (k * temp)
+            print(value)
+            if (r < math.exp(value)):
+                pass
+            else:
+                apply_offsets(graph, list(map(lambda x: -x, offsets)))
+        else:
+            # keep old graph
+            apply_offsets(graph, list(map(lambda x: -x, offsets)))
+
+        score = min(new_score, old_score)
+        if score < best_score:
+            best_score = score
+            save_positions(graph)
+
+            print(f"New best score found: {best_score}")
+
+        
 
     # generate 100 random placements and take the best
+    initial = random_search(graph, 100)
+
     
     k_max = 100
-    for k in range(0, k_max):
+    seed = random.randint(0,987432987432)
+    for k in range(0, k_max + 1):
         temp = temperature(k)
+
+        apply_neighbor_transform(initial, k, temp, seed)
+
         if k % 10 == 0:
             print(f"{k}: temp = {round(temp*100)/100}")
+        
+    i = 0
+    for pos in best_positions:
+        graph[i].position = pos
+        i += 1
+
+    print(manhattan_distance(graph))
+        
 
     return graph
