@@ -14,10 +14,10 @@ load_dotenv()
 minecraft = World()
 components = ComponentManager()
 
-unplaced = graph.load_graph("jsons/combi.json", "constraints.txt", components)
+unplaced = graph.load_graph("jsons/test.json", "constraints.txt", components)
 # placed = place_and_route(unplaced)
-placed = place.place_sa(unplaced)
-# placed = place.random_search(unplaced)
+placed = place.random_search(unplaced)
+# placed = place.place_sa(unplaced)
 netmap = place.placed_to_netmap(placed)
 
 offset = (0, 2, 0)
@@ -32,11 +32,10 @@ for cell in placed:
     static_bounding_box.update(tupleAdd(cell.position, pos) for pos in model.bounding_box)
 
 
+redstone_tracks = router.create_routes(netmap, static_bounding_box)
 
-# redstone_tracks = router.create_routes(netmap, static_bounding_box)
-
-# for block, position in redstone_tracks:
-#     print(f"put {block} at {position}")
-#     minecraft.set_block(tupleAdd(position, offset), block.to_minecraft())
+for block, position in redstone_tracks:
+    # print(f"put {block} at {position}")
+    minecraft.set_block(tupleAdd(position, offset), block.to_minecraft())
 
 minecraft.build(os.getenv("HOME") + "/.minecraft/saves/output")

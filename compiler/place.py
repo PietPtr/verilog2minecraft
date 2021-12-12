@@ -19,7 +19,7 @@ def collides_with_any(position, size, placed_cells):
 
 
 def place_random(graph, seed):
-    x_size = int(len(graph) * 3.0)
+    x_size = int(len(graph) * 5.0)
     y_size = x_size
 
     np.random.seed(seed)

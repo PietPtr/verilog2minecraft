@@ -8,7 +8,8 @@ from compiler.place import minecraft_cell_lib, collides_with_any
 def place_and_route(unplaced):
 
     to_place = [(None, unplaced[0])]
-    placed_cells = []
+    placed_cells = [x for x in unplaced if x.placed]
+    print(placed_cells)
 
     while len(to_place) > 0:
         placer, cell = to_place[0]
